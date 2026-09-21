@@ -6,11 +6,23 @@ Plain static HTML, no build step. GitHub Pages serves `main` from the repository
 
 ## Layout
 
+```text
+index.html                        homepage, sections marked with comment banners
+404.html                          not-found page
+.nojekyll                         tells Pages to skip Jekyll processing
+how-this-site-works/index.html    how the Pages mechanism works
+explainers/
+  jev/index.html                  JEV explainer
+  jev/poster/index.html           JEV print poster
 ```
-index.html    the whole site, one file, sections commented
-404.html      not-found page
-.nojekyll     tells Pages to skip Jekyll processing
-```
+
+A folder with an `index.html` serves at the folder's path, so `explainers/jev/index.html` answers `/explainers/jev/`.
+
+## Adding an explainer or infographic
+
+Drop a self-contained HTML file in as `explainers/<name>/index.html`, then add a card in the `EXPLAINERS` section of `index.html`. Files that reference `style.css` or an `img/` folder need those copied alongside at the same relative paths.
+
+See [how-this-site-works](https://aarora79.github.io/how-this-site-works/) for the full mechanism.
 
 ## Editing
 
@@ -45,7 +57,7 @@ Pages rebuilds in under a minute. Check the Actions tab if a change does not app
 Project sites published under this account, which live beneath this one:
 
 | Site | Repo |
-|---|---|
+| --- | --- |
 | [my-reading-list](https://aarora79.github.io/my-reading-list/) | `my-reading-list` |
 | [ai-everyday-life](https://aarora79.github.io/ai-everyday-life/) | `ai-everyday-life` |
 | [blueberries-in-my-salad-book](https://aarora79.github.io/blueberries-in-my-salad-book/) | `blueberries-in-my-salad-book` |

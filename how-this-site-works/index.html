@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How this site works</title>
+<meta name="description" content="How GitHub Pages serves this site: repository names, files as URLs, pushing as deploying, and what static hosting cannot do.">
+
+<style>
+  :root {
+    --bg:      #ffffff;
+    --surface: #f6f8fa;
+    --border:  #d8dee4;
+    --text:    #0b1220;
+    --muted:   #57606a;
+    --accent:  #1f6feb;
+    --code-bg: #f6f8fa;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:      #0b1220;
+      --surface: #0f182b;
+      --border:  #1f2a44;
+      --text:    #f0f6fc;
+      --muted:   #8b949e;
+      --accent:  #58a6ff;
+      --code-bg: #0f182b;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+                 Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 17px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 68ch;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+  }
+
+  a { color: var(--accent); }
+  a:hover { text-decoration: underline; }
+
+  .backlink {
+    margin: 20px 0 0;
+    font-size: 14px;
+  }
+  .backlink a { color: var(--muted); text-decoration: none; }
+
+  header.top {
+    padding: 44px 0 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: clamp(1.9rem, 5vw, 2.5rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  .standfirst {
+    color: var(--muted);
+    margin-top: 12px;
+    font-size: 1.05rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
+    margin: 40px 0 12px;
+  }
+
+  p { margin-top: 14px; }
+
+  ul { margin: 14px 0 0 22px; }
+  li { margin-top: 6px; }
+
+  code {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
+                 Consolas, monospace;
+    font-size: 0.87em;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 16px;
+    overflow-x: auto;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 18px;
+    font-size: 0.93rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem;
+       text-transform: uppercase; letter-spacing: 0.06em; }
+  td code { font-size: 0.85em; }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.87rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <p class="backlink"><a href="/">&#8592; aarora79.github.io</a></p>
+
+  <header class="top">
+    <h1>How this site works</h1>
+    <p class="standfirst">
+      Six files in a Git repository, 239 KB in total. GitHub copies them onto its web
+      servers and hands them to anyone who asks. None of my code runs on the server.
+    </p>
+  </header>
+
+  <h2>The repository name is the address</h2>
+
+  <p>
+    GitHub publishes a repository named <code>aarora79.github.io</code> at
+    <code>https://aarora79.github.io/</code>. The name does the work. Nothing else
+    configures it, and renaming the repository moves the address.
+  </p>
+
+  <p>
+    Every other repository publishes under a path instead. <code>my-reading-list</code>
+    serves at <code>aarora79.github.io/my-reading-list/</code>. You get one root site per
+    account, plus a path for each repository where you switch Pages on.
+  </p>
+
+  <h2>Files map to URLs</h2>
+
+  <p>
+    The repository is the file tree the web server sees. A request for a directory returns
+    the <code>index.html</code> inside it. That is the whole rule.
+  </p>
+
+  <table>
+    <tr>
+      <th>File in the repo</th>
+      <th>Address it answers</th>
+    </tr>
+    <tr>
+      <td><code>index.html</code></td>
+      <td><code>/</code></td>
+    </tr>
+    <tr>
+      <td><code>explainers/jev/index.html</code></td>
+      <td><code>/explainers/jev/</code></td>
+    </tr>
+    <tr>
+      <td><code>explainers/jev/poster/index.html</code></td>
+      <td><code>/explainers/jev/poster/</code></td>
+    </tr>
+    <tr>
+      <td><code>notes.html</code></td>
+      <td><code>/notes.html</code></td>
+    </tr>
+  </table>
+
+  <p>
+    A folder with an <code>index.html</code> gives the cleaner address, so I use that
+    shape and skip the <code>.html</code> on the end.
+  </p>
+
+  <h2>Pushing is deploying</h2>
+
+  <p>
+    <code>git push</code> ships the site. GitHub sees the new commit on
+    <code>main</code>, copies the files out, and serves them. The first push went live in
+    about fifteen seconds.
+  </p>
+
+  <p>
+    The HTML I commit is the HTML the browser receives, byte for byte. Nothing rewrites it
+    on the way through.
+  </p>
+
+  <h2>The two odd files</h2>
+
+  <p>
+    <code>.nojekyll</code> is empty, and its presence alone tells GitHub to skip Jekyll.
+    Jekyll is a blog generator that Pages runs by default, and it ignores any file or
+    folder whose name starts with an underscore. Plain HTML needs none of it.
+  </p>
+
+  <p>
+    <code>404.html</code> answers any address matching no file. GitHub picked it up on the
+    first push.
+  </p>
+
+  <h2>What it cannot do</h2>
+
+  <p>
+    No code of mine runs on the server, which rules out reading a database, checking a
+    password, handling a form submission, hiding an API key, and anything that changes per
+    visitor. Every visitor gets identical bytes.
+  </p>
+
+  <p>
+    JavaScript inside a page still runs, in the visitor's browser. A page can call a public
+    API, draw a chart, or filter a list. The
+    <a href="/explainers/jev/poster/">JEV poster</a> lays out two A4 pages with inline CSS
+    and base64 images, and asks the server for nothing.
+  </p>
+
+  <h2>Adding a page</h2>
+
+  <pre><code>mkdir -p explainers/new-thing
+cp ~/somewhere/thing.html explainers/new-thing/index.html
+git add -A &amp;&amp; git commit -m "Add new thing" &amp;&amp; git push</code></pre>
+
+  <p>
+    It answers at <code>/explainers/new-thing/</code> within a minute. Add a card on the
+    homepage so people can find it.
+  </p>
+
+  <p>
+    A self-contained file drops straight in. One that points at <code>style.css</code> or
+    <code>img/photo.png</code> needs those files copied alongside it, at the same relative
+    paths, or the page loads with no styling.
+  </p>
+
+  <h2>When a change does not appear</h2>
+
+  <ul>
+    <li>
+      Open the repository's Actions tab. Every push runs "pages build and deployment", and
+      a red mark means the files never shipped.
+    </li>
+    <li>
+      Green run, stale page: the browser cached it. Hard reload.
+    </li>
+    <li>
+      Check that Settings &rarr; Pages still reads <code>main</code> and <code>/</code>.
+    </li>
+  </ul>
+
+  <h2>Limits</h2>
+
+  <p>
+    1 GB for the published site, 100 MB for any single file, and roughly 100 GB of traffic
+    a month. This site uses 239 KB, so the ceiling is about four thousand times the current
+    size.
+  </p>
+
+  <h2>If I ever buy a domain</h2>
+
+  <p>
+    The hosting stays free. A registrar charges for the name, about $10 to $15 a year for a
+    <code>.com</code>. Point DNS at GitHub, type the domain into Settings &rarr; Pages, and
+    GitHub issues a certificate and serves HTTPS.
+  </p>
+
+  <p>
+    For a subdomain like <code>blog.example.com</code>, that is one <code>CNAME</code>
+    record aimed at <code>aarora79.github.io</code>. For a bare
+    <code>example.com</code>, it is four <code>A</code> records:
+    <code>185.199.108.153</code> through <code>185.199.111.153</code>.
+  </p>
+
+  <p>
+    One catch worth knowing first: a custom domain on this repository takes the path sites
+    with it, so <code>my-reading-list</code> would start answering at
+    <code>example.com/my-reading-list/</code>.
+  </p>
+
+  <footer>
+    <a href="/">Home</a> &nbsp;·&nbsp;
+    <a href="https://github.com/aarora79/aarora79.github.io">Source for this site</a>
+  </footer>
+
+</div>
+
+</body>
+</html>
