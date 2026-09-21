@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amit Arora</title>
+<meta name="description" content="Amit Arora. Agentic AI infrastructure, MCP, and agent evaluation. Principal Solutions Architect, AI/ML at AWS. Adjunct Professor, Georgetown University.">
+<meta name="author" content="Amit Arora">
+<link rel="canonical" href="https://aarora79.github.io/">
+
+<!-- Open Graph, so links unfurl properly when shared -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Amit Arora">
+<meta property="og:description" content="Agentic AI infrastructure, MCP, and agent evaluation. Notes on what I am learning.">
+<meta property="og:url" content="https://aarora79.github.io/">
+
+<style>
+  /* ---------------------------------------------------------------
+     Palette lifted from the profile hero SVGs so this page matches
+     the GitHub profile. Edit these two blocks to restyle the site.
+     --------------------------------------------------------------- */
+  :root {
+    --bg:        #ffffff;
+    --surface:   #f6f8fa;
+    --border:    #d8dee4;
+    --text:      #0b1220;
+    --muted:     #57606a;
+    --accent:    #1f6feb;
+    --accent-dim: #ddf4ff;
+    --shadow:    0 1px 3px rgba(11, 18, 32, 0.08);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:        #0b1220;
+      --surface:   #0f182b;
+      --border:    #1f2a44;
+      --text:      #f0f6fc;
+      --muted:     #8b949e;
+      --accent:    #58a6ff;
+      --accent-dim: #141d33;
+      --shadow:    0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+                 Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ---------- Hero ---------- */
+
+  header {
+    padding: 72px 0 40px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h1 {
+    font-size: clamp(2.1rem, 6vw, 3rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+
+  .tagline {
+    font-size: 1.05rem;
+    color: var(--accent);
+    font-weight: 500;
+    margin-top: 10px;
+  }
+
+  .role {
+    color: var(--muted);
+    margin-top: 6px;
+    font-size: 0.95rem;
+  }
+
+  .intro { margin-top: 24px; }
+  .intro p + p { margin-top: 14px; }
+
+  .social {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-top: 26px;
+    font-size: 0.9rem;
+  }
+
+  /* ---------- Sections ---------- */
+
+  section { padding: 44px 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: none; }
+
+  h2 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .section-lede {
+    color: var(--text);
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    letter-spacing: -0.01em;
+  }
+
+  /* ---------- Card grid ---------- */
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+  }
+
+  .card {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    color: inherit;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .card:hover {
+    border-color: var(--accent);
+    text-decoration: none;
+    transform: translateY(-2px);
+  }
+
+  .card h3 {
+    font-size: 0.97rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 5px;
+  }
+
+  .card p {
+    font-size: 0.86rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-radius: 4px;
+    padding: 2px 7px;
+    margin-left: 7px;
+    vertical-align: 1px;
+  }
+
+  /* ---------- Simple lists ---------- */
+
+  .list { list-style: none; }
+
+  .list li {
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.93rem;
+    display: flex;
+    gap: 14px;
+  }
+
+  .list li:last-child { border-bottom: none; }
+
+  .when {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    flex: 0 0 74px;
+    font-size: 0.85rem;
+    padding-top: 1px;
+  }
+
+  /* ---------- Footer ---------- */
+
+  footer {
+    padding: 36px 0 56px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 480px) {
+    header { padding-top: 48px; }
+    .list li { flex-direction: column; gap: 2px; }
+    .when { flex: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- =========================================================
+       HERO
+       ========================================================= -->
+  <header>
+    <h1>Amit Arora</h1>
+    <p class="tagline">Agentic AI infrastructure, MCP, and agent evaluation.</p>
+    <p class="role">
+      Principal Solutions Architect, AI/ML at AWS &nbsp;·&nbsp;
+      Adjunct Professor, Georgetown University
+    </p>
+
+    <div class="intro">
+      <p>
+        I work on the infrastructure layer of enterprise agentic AI: the gateways and
+        registries that let agents discover and call tools under real authentication and
+        audit, and the benchmarks that tell you which model to trust for a given job.
+        Most of it ships in the open.
+      </p>
+      <p>
+        This site is where I keep notes on what I am learning. Papers I have read,
+        courses I have built, and things I got wrong the first time.
+      </p>
+    </div>
+
+    <nav class="social">
+      <a href="https://github.com/aarora79">GitHub</a>
+      <a href="https://www.linkedin.com/in/amit-arora-539120a/">LinkedIn</a>
+      <a href="https://twitter.com/aarora79">X</a>
+      <a href="https://openreview.net/forum?id=yCsHQnvvWY">Publications</a>
+    </nav>
+  </header>
+
+  <!-- =========================================================
+       LEARNING  ·  the point of this site
+       ========================================================= -->
+  <section id="learning">
+    <h2>Learning</h2>
+    <p class="section-lede">Notes, wikis, and courses I keep in public.</p>
+
+    <div class="cards">
+      <a class="card" href="https://github.com/aarora79/personal-knowledge-base">
+        <h3>Knowledge base</h3>
+        <p>
+          An interlinked wiki on generative AI, compiled from clipped primary sources.
+          63 articles and counting.
+        </p>
+      </a>
+
+      <a class="card" href="https://aarora79.github.io/my-reading-list/">
+        <h3>Reading list</h3>
+        <p>What I am reading, and what stuck.</p>
+      </a>
+
+      <a class="card" href="https://github.com/aarora79/ai-learning-path">
+        <h3>AI learning path</h3>
+        <p>
+          A self paced six week program to a working 200 level grasp of modern AI,
+          three weeks of it on agents.
+        </p>
+      </a>
+
+      <a class="card" href="https://github.com/aarora79/k8s-100-to-mcp-gateway">
+        <h3>Kubernetes, zero to capstone</h3>
+        <p>
+          From no containers to running the MCP Gateway Registry and serving an LLM
+          locally, in 13 phases.
+        </p>
+      </a>
+
+      <a class="card" href="https://aarora79.github.io/ai-everyday-life/">
+        <h3>AI in everyday life</h3>
+        <p>A weekend course on AI for people who do not write code.</p>
+      </a>
+
+      <a class="card" href="https://aarora79.github.io/blueberries-in-my-salad-book/">
+        <h3>Blueberries in my salad</h3>
+        <p>A book project.</p>
+      </a>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       BUILDING
+       ========================================================= -->
+  <section id="building">
+    <h2>Building</h2>
+    <p class="section-lede">Open source, mostly infrastructure for agents.</p>
+
+    <div class="cards">
+      <a class="card" href="https://github.com/agentic-community/mcp-gateway-registry">
+        <h3>mcp-gateway-registry<span class="tag">lead</span></h3>
+        <p>
+          Enterprise MCP gateway and registry for agents, MCP servers, and skills.
+          OAuth and OIDC, dynamic tool discovery, auditable tool access. 180+ enterprise
+          deployments.
+        </p>
+      </a>
+
+      <a class="card" href="https://github.com/princeton-pli/hal-harness">
+        <h3>hal-harness<span class="tag">ICLR 2026</span></h3>
+        <p>
+          The Holistic Agent Leaderboard, a standardized harness for evaluating AI agents,
+          built with Princeton researchers.
+        </p>
+      </a>
+
+      <a class="card" href="https://github.com/aws-samples/foundation-model-benchmarking-tool">
+        <h3>FMBench</h3>
+        <p>
+          Foundation model benchmarking across hardware and serving stacks, so teams pick
+          on measured cost and latency rather than intuition.
+        </p>
+      </a>
+
+      <a class="card" href="https://github.com/aarora79/agentic-coding-harness-benchmarks">
+        <h3>Coding harness benchmarks</h3>
+        <p>
+          18 models over 21 real tasks, reduced to a cost and quality Pareto frontier.
+          Ships a router that names the cheapest model clearing the bar.
+        </p>
+      </a>
+
+      <a class="card" href="https://github.com/aarora79/aws-cost-explorer-mcp-server">
+        <h3>aws-cost-explorer-mcp-server</h3>
+        <p>
+          An early MCP server, written weeks after the protocol shipped. Ask plain language
+          questions about your AWS spend.
+        </p>
+      </a>
+
+      <a class="card" href="https://github.com/agentic-community/openapi-to-mcp">
+        <h3>openapi-to-mcp</h3>
+        <p>Turns an OpenAPI specification into a production ready MCP server.</p>
+      </a>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       TEACHING
+       ========================================================= -->
+  <section id="teaching">
+    <h2>Teaching</h2>
+    <p class="section-lede">Georgetown University, M.S. in Data Science and Analytics.</p>
+    <p>
+      I created and teach <strong>DSAN-6725, Applied Generative AI for AI Developers</strong>,
+      one of the first comprehensive generative AI courses offered in academia. It is now the
+      most popular course in the program and earned a perfect 5 out of 5 in student reviews for
+      Spring 2026. I also teach <strong>DSAN-6000, Big Data and Cloud Computing</strong>, and am
+      building a new graduate course on AI agents. 500+ graduate students so far.
+    </p>
+  </section>
+
+  <!-- =========================================================
+       WRITING  ·  add new posts at the top
+       ========================================================= -->
+  <section id="writing">
+    <h2>Writing</h2>
+    <p class="section-lede">Selected posts from thirteen on the AWS blogs.</p>
+
+    <ul class="list">
+      <li>
+        <span class="when">Jun 2026</span>
+        <a href="https://aws.amazon.com/blogs/opensource/governing-ai-assets-at-scale-with-mcp-gateway-and-registry/">Governing AI assets at scale with MCP Gateway and Registry</a>
+      </li>
+      <li>
+        <span class="when">May 2026</span>
+        <a href="https://aws.amazon.com/blogs/machine-learning/securing-ai-agents-how-aws-and-cisco-ai-defense-scale-mcp-and-a2a-deployments/">Securing AI agents: how AWS and Cisco AI Defense scale MCP and A2A deployments</a>
+      </li>
+      <li>
+        <span class="when">Sep 2025</span>
+        <a href="https://aws.amazon.com/blogs/machine-learning/build-multi-agent-site-reliability-engineering-assistants-with-amazon-bedrock-agentcore/">Build multi-agent site reliability engineering assistants with Amazon Bedrock AgentCore</a>
+      </li>
+      <li>
+        <span class="when">Apr 2025</span>
+        <a href="https://aws.amazon.com/blogs/machine-learning/harness-the-power-of-mcp-servers-with-amazon-bedrock-agents/">Harness the power of MCP servers with Amazon Bedrock Agents</a>
+      </li>
+      <li>
+        <span class="when">Aug 2024</span>
+        <a href="https://aws.amazon.com/blogs/machine-learning/how-cisco-accelerated-the-use-of-generative-ai-with-amazon-sagemaker-inference/">How Cisco accelerated the use of generative AI with Amazon SageMaker Inference</a>
+      </li>
+    </ul>
+  </section>
+
+  <!-- =========================================================
+       TALKS
+       ========================================================= -->
+  <section id="talks">
+    <h2>Talks</h2>
+    <p class="section-lede">Available to speak on enterprise MCP architecture and agent evaluation.</p>
+
+    <ul class="list">
+      <li>
+        <span class="when">2026</span>
+        <span>ICLR &nbsp;·&nbsp; Holistic Agent Leaderboard, co-presented with Princeton University researchers</span>
+      </li>
+      <li>
+        <span class="when">2026</span>
+        <span>ACM AgentSkills, CAIS Workshop &nbsp;·&nbsp; <a href="https://openreview.net/forum?id=yCsHQnvvWY">From Observed Reasoning to Stable Skills</a></span>
+      </li>
+      <li>
+        <span class="when">2026</span>
+        <span>MCP Dev Summit, NYC and Amsterdam &nbsp;·&nbsp; MCP Gateway and Registry</span>
+      </li>
+      <li>
+        <span class="when">2025</span>
+        <span>AWS re:Invent &nbsp;·&nbsp; AIM3314, observability for agentic applications</span>
+      </li>
+      <li>
+        <span class="when">2024</span>
+        <span>AWS re:Invent &nbsp;·&nbsp; NFX307, benchmarking FMs across hardware platforms, with Netflix</span>
+      </li>
+    </ul>
+  </section>
+
+  <footer>
+    Maryland, USA &nbsp;·&nbsp;
+    <a href="https://github.com/aarora79/aarora79.github.io">Source</a> &nbsp;·&nbsp;
+    26 granted patents in satellite telecommunications and applied machine learning
+  </footer>
+
+</div>
+
+</body>
+</html>
