@@ -57,9 +57,9 @@
   }
 
   .wrap {
-    max-width: 820px;
+    max-width: 1280px;
     margin: 0 auto;
-    padding: 0 24px;
+    padding: 0 28px;
   }
 
   a { color: var(--accent); text-decoration: none; }
@@ -91,6 +91,8 @@
     margin-top: 6px;
     font-size: 0.95rem;
   }
+
+  .role + .role { margin-top: 1px; }
 
   .intro { margin-top: 24px; }
   .intro p + p { margin-top: 14px; }
@@ -207,6 +209,40 @@
     border-top: 1px solid var(--border);
   }
 
+  /* ---------------------------------------------------------------
+     Wide screens: two columns. The identity block pins to the left
+     and stays put while the sections scroll past on the right.
+
+     align-items: start is what makes the sticky work. Without it the
+     grid stretches the sidebar to full row height, and a full-height
+     element has nowhere to stick to.
+     --------------------------------------------------------------- */
+  @media (min-width: 1024px) {
+    .wrap {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      column-gap: 64px;
+      align-items: start;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 44px;
+      padding: 64px 0 24px;
+      border-bottom: none;
+      max-height: calc(100vh - 88px);
+      overflow-y: auto;
+    }
+
+    .content { padding-top: 46px; }
+
+    /* First section already reads as the top of the column, so it does
+       not need the rule above it that separates the stacked layout. */
+    .content > section:first-child { padding-top: 18px; }
+
+    footer { grid-column: 1 / -1; margin-top: 8px; }
+  }
+
   @media (max-width: 480px) {
     header { padding-top: 48px; }
     .list li { flex-direction: column; gap: 2px; }
@@ -219,15 +255,14 @@
 <div class="wrap">
 
   <!-- =========================================================
-       HERO
+       IDENTITY  ·  becomes the pinned left column at >=1024px,
+       stacks on top of the content below that.
        ========================================================= -->
-  <header>
+  <header class="sidebar">
     <h1>Amit Arora</h1>
     <p class="tagline">Agentic AI infrastructure, MCP, and agent evaluation.</p>
-    <p class="role">
-      Principal Solutions Architect, AI/ML at AWS &nbsp;·&nbsp;
-      Adjunct Professor, Georgetown University
-    </p>
+    <p class="role">Principal Solutions Architect, AI/ML at AWS</p>
+    <p class="role">Adjunct Professor, Georgetown University</p>
 
     <div class="intro">
       <p>
@@ -249,6 +284,11 @@
       <a href="https://openreview.net/forum?id=yCsHQnvvWY">Publications</a>
     </nav>
   </header>
+
+  <!-- =========================================================
+       CONTENT COLUMN  ·  everything that scrolls
+       ========================================================= -->
+  <main class="content">
 
   <!-- =========================================================
        LEARNING  ·  the point of this site
@@ -456,6 +496,8 @@
       </li>
     </ul>
   </section>
+
+  </main>
 
   <footer>
     Maryland, USA &nbsp;·&nbsp;
