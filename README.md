@@ -10,11 +10,14 @@ Plain static HTML, no build step. GitHub Pages serves `main` from the repository
 index.html                        homepage, sections marked with comment banners
 404.html                          not-found page
 .nojekyll                         tells Pages to skip Jekyll processing
+aws-blogs/index.html              full listing of all thirteen AWS blog posts
 how-this-site-works/index.html    how the Pages mechanism works
 explainers/
   jev/index.html                  JEV explainer
   jev/poster/index.html           JEV print poster
 ```
+
+The homepage `WRITING` section shows five selected posts and links to `aws-blogs/` for the full list. Adding a post means editing both: a `<li>` on the full listing (under its year), and optionally one on the homepage.
 
 A folder with an `index.html` serves at the folder's path, so `explainers/jev/index.html` answers `/explainers/jev/`.
 

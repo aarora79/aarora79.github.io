@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS blog posts &middot; Amit Arora</title>
+<meta name="description" content="All thirteen posts by Amit Arora on the AWS blogs, 2023 to 2026. Agentic AI, MCP, Amazon Bedrock, Amazon SageMaker inference, and benchmarking.">
+
+<style>
+  :root {
+    --bg:        #ffffff;
+    --surface:   #f6f8fa;
+    --border:    #d8dee4;
+    --text:      #0b1220;
+    --muted:     #57606a;
+    --accent:    #1f6feb;
+    --accent-dim: #ddf4ff;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:        #0b1220;
+      --surface:   #0f182b;
+      --border:    #1f2a44;
+      --text:      #f0f6fc;
+      --muted:     #8b949e;
+      --accent:    #58a6ff;
+      --accent-dim: #141d33;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+                 Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 28px 96px;
+  }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .backlink { margin: 20px 0 0; font-size: 14px; }
+  .backlink a { color: var(--muted); }
+
+  header.top {
+    padding: 44px 0 30px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h1 {
+    font-size: clamp(1.9rem, 5vw, 2.5rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  .standfirst {
+    color: var(--muted);
+    margin-top: 12px;
+    font-size: 1.05rem;
+    max-width: 62ch;
+  }
+
+  /* ---------- Year groups ---------- */
+
+  h2 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    font-weight: 600;
+    margin: 40px 0 4px;
+  }
+
+  .posts { list-style: none; }
+
+  .posts li {
+    display: flex;
+    gap: 18px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .posts li:last-child { border-bottom: none; }
+
+  .when {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    flex: 0 0 66px;
+    font-size: 0.85rem;
+    padding-top: 3px;
+  }
+
+  .title { flex: 1; }
+
+  .meta {
+    display: block;
+    margin-top: 3px;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-radius: 4px;
+    padding: 2px 7px;
+    margin-left: 6px;
+    vertical-align: 1px;
+  }
+
+  footer {
+    margin-top: 52px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.87rem;
+  }
+
+  @media (max-width: 480px) {
+    .posts li { flex-direction: column; gap: 2px; }
+    .when { flex: none; padding-top: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <p class="backlink"><a href="/">&#8592; aarora79.github.io</a></p>
+
+  <header class="top">
+    <h1>AWS blog posts</h1>
+    <p class="standfirst">
+      Thirteen posts on the AWS blogs, 2023 to 2026. Four are co-authored with the
+      customer whose system they describe. All on the AWS Machine Learning Blog except
+      where noted.
+    </p>
+  </header>
+
+  <!-- Newest first. Add a new post at the top of its year, and add the
+       year as a new <h2> + <ul class="posts"> pair if it does not exist. -->
+
+  <h2>2026</h2>
+  <ul class="posts">
+    <li>
+      <span class="when">Jun 2026</span>
+      <span class="title">
+        <a href="https://aws.amazon.com/blogs/opensource/governing-ai-assets-at-scale-with-mcp-gateway-and-registry/">Governing AI assets at scale with MCP Gateway and Registry</a>
+        <span class="meta">AWS Open Source Blog</span>
+      </span>
+    </li>
+    <li>
+      <span class="when">May 2026</span>
+      <span class="title">
+        <a href="https://aws.amazon.com/blogs/machine-learning/securing-ai-agents-how-aws-and-cisco-ai-defense-scale-mcp-and-a2a-deployments/">Securing AI agents: how AWS and Cisco AI Defense scale MCP and A2A deployments</a><span class="tag">Cisco</span>
+      </span>
+    </li>
+  </ul>
+
+  <h2>2025</h2>
+  <ul class="posts">
+    <li>
+      <span class="when">Sep 2025</span>
+      <span class="title">
+        <a href="https://aws.amazon.com/blogs/machine-learning/build-multi-agent-site-reliability-engineering-assistants-with-amazon-bedrock-agentcore/">Build multi-agent site reliability engineering assistants with Amazon Bedrock AgentCore</a>
+      </span>
+    </li>
+    <li>
+      <span class="when">Apr 2025</span>
+      <span class="title">
+        <a href="https://aws.amazon.com/blogs/machine-learning/harness-the-power-of-mcp-servers-with-amazon-bedrock-agents/">Harness the power of MCP servers with Amazon Bedrock Agents</a>
+      </span>
+    </li>
+  </ul>
+
+  <h2>2024</h2>
+  <ul class="posts">
+    <li>
+      <span class="when">Dec 2024</span>
+      <span class="title">
+        <a href="https://aws.amazon.com/blogs/machine-learning/talk-to-your-slide-deck-using-multimodal-foundation-models-on-amazon-bedrock-part-3/">Talk to your slide deck using multimodal foundation models on Amazon Bedrock, Part 3</a>
+      </span>
+    </li>
+    <li>
+      <span class="when">Aug 2024</span>
+      <span class="title">
+        <a href="https://aws.amazon.com/blogs/machine-learning/how-cisco-accelerated-the-use-of-generative-ai-with-amazon-sagemaker-inference/">How Cisco accelerated the use of generative AI with Amazon SageMaker Inference</a><span class="tag">Cisco</span>
+      </span>
+    </li>
+    <li>
+      <span class="when">Aug 2024</span>
+      <span class="title">
+        <a href="https://aws.amazon.com/blogs/machine-learning/how-twilio-generated-sql-using-looker-modeling-language-data-with-amazon-bedrock/">How Twilio generated SQL using Looker Modeling Language data with Amazon Bedrock</a><span class="tag">Twilio</span>
+      </span>
+    </li>
+    <li>
+      <span class="when">Jun 2024</span>
+      <span class="title">
+        <a href="https://aws.amazon.com/blogs/machine-learning/how-twilio-used-amazon-sagemaker-mlops-pipelines-with-prestodb-to-enable-frequent-model-retraining-and-optimized-batch-transform/">How Twilio used Amazon SageMaker MLOps pipelines with PrestoDB to enable frequent model retraining and optimized batch transform</a><span class="tag">Twilio</span>
+      </span>
+    </li>
+    <li>
+      <span class="when">Apr 2024</span>
+      <span class="title">
+        <a href="https://aws.amazon.com/blogs/machine-learning/use-kubernetes-operators-for-new-inference-capabilities-in-amazon-sagemaker-that-reduce-llm-deployment-costs-by-50-on-average/">Use Kubernetes Operators for new inference capabilities in Amazon SageMaker that reduce LLM deployment costs by 50% on average</a>
+      </span>
+    </li>
+    <li>
+      <span class="when">Apr 2024</span>
+      <span class="title">
+        <a href="https://aws.amazon.com/blogs/machine-learning/talk-to-your-slide-deck-using-multimodal-foundation-models-hosted-on-amazon-bedrock-and-amazon-sagemaker-part-2/">Talk to your slide deck using multimodal foundation models hosted on Amazon Bedrock and Amazon SageMaker, Part 2</a>
+      </span>
+    </li>
+    <li>
+      <span class="when">Jan 2024</span>
+      <span class="title">
+        <a href="https://aws.amazon.com/blogs/machine-learning/talk-to-your-slide-deck-using-multimodal-foundation-models-hosted-on-amazon-bedrock-and-amazon-sagemaker-part-1/">Talk to your slide deck using multimodal foundation models hosted on Amazon Bedrock and Amazon SageMaker, Part 1</a>
+      </span>
+    </li>
+  </ul>
+
+  <h2>2023</h2>
+  <ul class="posts">
+    <li>
+      <span class="when">Nov 2023</span>
+      <span class="title">
+        <a href="https://aws.amazon.com/blogs/machine-learning/build-a-foundation-model-fm-powered-customer-service-bot-with-amazon-bedrock-agents/">Build a foundation model powered customer service bot with Amazon Bedrock agents</a>
+      </span>
+    </li>
+    <li>
+      <span class="when">Mar 2023</span>
+      <span class="title">
+        <a href="https://aws.amazon.com/blogs/machine-learning/use-snowflake-as-a-data-source-to-train-ml-models-with-amazon-sagemaker/">Use Snowflake as a data source to train ML models with Amazon SageMaker</a>
+      </span>
+    </li>
+  </ul>
+
+  <footer>
+    <a href="/">Home</a> &nbsp;·&nbsp;
+    <a href="https://www.linkedin.com/in/amit-arora-539120a/">LinkedIn</a> &nbsp;·&nbsp;
+    <a href="https://openreview.net/forum?id=yCsHQnvvWY">Publications</a>
+  </footer>
+
+</div>
+
+</body>
+</html>
