@@ -16,6 +16,7 @@ explainers/
   jev/index.html                  JEV explainer
   jev/poster/index.html           JEV print poster
   costing-an-ai-powered-sql-filter/index.html   AI-SQL filter cost explainer
+  agentic-ai-bookmarks-2026/index.html          agentic AI bookmarks, 2026
 ```
 
 The homepage `WRITING` section shows five selected posts and links to `aws-blogs/` for the full list. Adding a post means editing both: a `<li>` on the full listing (under its year), and optionally one on the homepage.
