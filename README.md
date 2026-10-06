@@ -34,8 +34,9 @@ See [how-this-site-works](https://aarora79.github.io/how-this-site-works/) for t
 Everything lives in `index.html`. The sections are marked with comment banners, so search for the banner you want:
 
 - `HERO` for the name, tagline, and intro
-- `LEARNING` for the notes, wikis, and courses cards
+- `EXPLAINERS` for the explainer and infographic cards
 - `BUILDING` for the open source cards
+- `LEARNING` for the notes, wikis, and courses cards
 - `TEACHING`, `WRITING`, `TALKS` for the rest
 
 Colors are CSS custom properties at the top of the `<style>` block, one set for light mode and one for dark. The palette matches the hero images on my [profile README](https://github.com/aarora79/aarora79).
