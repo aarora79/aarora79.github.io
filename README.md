@@ -17,7 +17,7 @@ explainers/
   jev/poster/index.html           JEV print poster
   costing-an-ai-powered-sql-filter/index.html   AI-SQL filter cost explainer
   agentic-ai-bookmarks-2026/index.html          agentic AI bookmarks, 2026
-  on-ai/index.html                              On AI: three borrowed ideas
+  on-ai/index.html                              On AI: three ideas informing my thinking
   on-ai/on-ai-infographic.png                   PNG of the same infographic
 ```
 
