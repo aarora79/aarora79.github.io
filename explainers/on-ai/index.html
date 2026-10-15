@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>On AI: three borrowed ideas</title>
+<style>
+  :root {
+    --bg: #fffdf5; --surface: #ffffff; --ink: #1d2b2a; --muted: #52615f;
+    --teal: #0f766e; --teal-soft: #e0f2ef; --yellow: #f5c518; --yellow-soft: #fff6cc;
+    --line: #e4e0d0; --code: #f3f1e8; --zebra: #faf8ef;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10191a; --surface: #172224; --ink: #e8efee; --muted: #9fb2b0;
+      --teal: #4fd1c1; --teal-soft: #173a38; --yellow: #f5c518; --yellow-soft: #3a3312;
+      --line: #2a3a3b; --code: #1f2c2e; --zebra: #13201f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.6 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
+  header { border-left: 6px solid var(--yellow); padding: 4px 0 4px 16px; margin-bottom: 28px; }
+  h1 { margin: 0; font-size: 1.9rem; color: var(--teal); }
+  .sub { color: var(--muted); margin: 4px 0 0; }
+  h2 { font-size: 1.25rem; color: var(--teal); margin: 36px 0 10px;
+    padding-bottom: 6px; border-bottom: 2px solid var(--yellow); }
+  a { color: var(--teal); }
+  p { margin: 0 0 18px; }
+  ul li { margin: 4px 0; }
+  .lede { font-size: 1.05rem; }
+  .note { background: var(--yellow-soft); border-left: 4px solid var(--yellow); padding: 10px 14px;
+    border-radius: 0 8px 8px 0; margin: 0 0 18px; }
+  .figwrap { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    padding: 18px; margin: 20px 0; }
+  .figwrap svg { width: 100%; height: auto; display: block; }
+  figcaption { color: var(--muted); font-size: .85rem; margin-top: 10px; }
+  .diag-label { fill: var(--muted); font: 600 13px "Segoe UI", Roboto, sans-serif; }
+  .diag-ink { fill: var(--ink); font-family: "Segoe UI", Roboto, sans-serif; }
+  pre.plain { background: var(--code); border: 1px solid var(--line); border-radius: 8px;
+    padding: 14px 16px; font: 14px/1.5 ui-monospace, Consolas, "Liberation Mono", monospace;
+    white-space: pre-wrap; word-break: break-word; color: var(--ink); }
+  footer { margin-top: 40px; color: var(--muted); font-size: .85rem; }
+  @media print { body { background: #fff; } main { padding: 0; } .figwrap { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <h1>On AI: three borrowed ideas</h1>
+  <p class="sub">David Deutsch, Sayash Kapoor and Arvind Narayanan, Terence Tao &middot; October 2026</p>
+</header>
+
+<p class="lede">Last week, at dinner with colleagues, a sidebar conversation turned to the big picture on AI. It made me write down ideas I had picked up from two years of reading but never thought through.</p>
+
+<p class="note">Fair warning: everything here is my own interpretation of what I read. Any misreading is mine alone.</p>
+
+<div class="figwrap">
+<svg viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Three borrowed ideas about AI: the frontier of knowledge is infinite (Deutsch), AI is normal technology (Kapoor and Narayanan), and human and machine intelligence share the same space (Tao). In my daily work: more done with AI, better models every six months, problems I did not know existed a few months ago.">
+  <rect width="1200" height="1200" fill="var(--bg)"/>
+
+  <!-- header -->
+  <rect x="60" y="60" width="10" height="112" fill="var(--yellow)"/>
+  <text x="92" y="112" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="54" font-weight="800" fill="var(--teal)">On AI: three borrowed ideas</text>
+  <text x="92" y="158" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="26" fill="var(--muted)">What I think AI is for, in one picture</text>
+
+  <!-- rows -->
+  <rect x="60" y="214" width="1080" height="236" rx="14" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+  <g transform="translate(0,214)">
+<circle cx="92" cy="118" r="30" fill="var(--yellow)"/>
+<text x="92" y="130" text-anchor="middle" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="34" font-weight="800" fill="var(--ink)">1</text>
+<g transform="translate(120,12)">
+  <line x1="20" y1="118" x2="280" y2="118" stroke="var(--muted)" stroke-width="2" stroke-dasharray="6,6"/>
+  <circle cx="200" cy="112" r="26" fill="var(--yellow)"/>
+  <rect x="20" y="118" width="260" height="90" fill="var(--bg)"/>
+  <line x1="20" y1="118" x2="280" y2="118" stroke="var(--muted)" stroke-width="2" stroke-dasharray="6,6"/>
+  <path d="M50,208 L250,208 L172,118 L128,118 Z" fill="var(--teal-soft)" stroke="var(--teal)" stroke-width="2.5"/>
+  <line x1="150" y1="202" x2="150" y2="122" stroke="var(--teal)" stroke-width="3" stroke-dasharray="10,9"/>
+  <text x="150" y="60" text-anchor="middle" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="40" font-weight="700" fill="var(--teal)">&#8734;</text>
+</g>
+<text x="430" y="66" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="34" font-weight="800" fill="var(--teal)">The frontier of knowledge is infinite</text>
+<text x="430" y="110" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="24" fill="var(--ink)">The frontier cannot be known in advance, so we</text>
+<text x="430" y="146" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="24" fill="var(--ink)">cannot run out of interesting problems. AI speeds up</text>
+<text x="430" y="182" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="24" fill="var(--ink)">the known ones; the undiscovered ones remain.</text>
+<text x="430" y="220" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="20" font-weight="600" fill="var(--muted)">David Deutsch, The Beginning of Infinity</text>
+</g>
+
+  <rect x="60" y="476" width="1080" height="236" rx="14" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+  <g transform="translate(0,476)">
+<circle cx="92" cy="118" r="30" fill="var(--yellow)"/>
+<text x="92" y="130" text-anchor="middle" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="34" font-weight="800" fill="var(--ink)">2</text>
+<g transform="translate(120,12)">
+  <line x1="60" y1="92" x2="60" y2="30" stroke="var(--teal)" stroke-width="3"/>
+  <path d="M51,42 L60,28 L69,42 z" fill="var(--teal)"/>
+  <rect x="35" y="96" width="50" height="104" rx="4" fill="var(--teal-soft)" stroke="var(--teal)" stroke-width="2.5"/>
+  <g fill="var(--teal)" opacity="0.55">
+    <rect x="43" y="106" width="9" height="9"/><rect x="56" y="106" width="9" height="9"/><rect x="69" y="106" width="9" height="9"/>
+    <rect x="43" y="122" width="9" height="9"/><rect x="56" y="122" width="9" height="9"/><rect x="69" y="122" width="9" height="9"/>
+    <rect x="43" y="138" width="9" height="9"/><rect x="56" y="138" width="9" height="9"/><rect x="69" y="138" width="9" height="9"/>
+    <rect x="43" y="154" width="9" height="9"/><rect x="56" y="154" width="9" height="9"/><rect x="69" y="154" width="9" height="9"/>
+    <rect x="43" y="170" width="9" height="9"/><rect x="56" y="170" width="9" height="9"/><rect x="69" y="170" width="9" height="9"/>
+  </g>
+  <circle cx="160" cy="148" r="52" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="7,7"/>
+  <circle cx="160" cy="148" r="40" fill="var(--teal-soft)" stroke="var(--teal)" stroke-width="2.5"/>
+  <rect x="236" y="76" width="46" height="14" rx="3" fill="var(--yellow)" stroke="var(--ink)" stroke-width="1.6"/>
+  <rect x="243" y="90" width="32" height="110" rx="4" fill="var(--teal-soft)" stroke="var(--teal)" stroke-width="2.5"/>
+  <rect x="243" y="140" width="32" height="60" rx="4" fill="var(--teal)" opacity="0.45"/>
+</g>
+<text x="430" y="66" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="34" font-weight="800" fill="var(--teal)">AI is normal technology</text>
+<text x="430" y="110" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="24" fill="var(--ink)">The task sets the limit, not the model. Some tasks have</text>
+<text x="430" y="146" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="24" fill="var(--ink)">no ceiling, some cap themselves, and some are gated</text>
+<text x="430" y="182" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="24" fill="var(--ink)">by verification in the real world.</text>
+<text x="430" y="220" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="20" font-weight="600" fill="var(--muted)">Sayash Kapoor and Arvind Narayanan, AI as Normal Technology</text>
+</g>
+
+  <rect x="60" y="738" width="1080" height="236" rx="14" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+  <g transform="translate(0,738)">
+<circle cx="92" cy="118" r="30" fill="var(--yellow)"/>
+<text x="92" y="130" text-anchor="middle" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="34" font-weight="800" fill="var(--ink)">3</text>
+<g transform="translate(120,12)">
+  <defs>
+    <clipPath id="c-left"><circle cx="105" cy="120" r="78"/></clipPath>
+  </defs>
+  <circle cx="105" cy="120" r="78" fill="var(--teal-soft)" stroke="var(--teal)" stroke-width="2.5"/>
+  <circle cx="195" cy="120" r="78" fill="var(--teal-soft)" stroke="var(--teal)" stroke-width="2.5"/>
+  <circle cx="195" cy="120" r="78" fill="var(--yellow)" clip-path="url(#c-left)"/>
+  <circle cx="105" cy="120" r="78" fill="none" stroke="var(--teal)" stroke-width="2.5"/>
+  <text x="68" y="128" text-anchor="middle" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="22" font-weight="700" fill="var(--ink)">human</text>
+  <text x="232" y="128" text-anchor="middle" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="22" font-weight="700" fill="var(--ink)">model</text>
+</g>
+<text x="430" y="66" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="34" font-weight="800" fill="var(--teal)">Human and machine share one space</text>
+<text x="430" y="110" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="24" fill="var(--ink)">Drop the pre-Copernican view with humans at the center.</text>
+<text x="430" y="146" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="24" fill="var(--ink)">Ask what a human and a model can do together</text>
+<text x="430" y="182" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="24" fill="var(--ink)">that neither could do alone.</text>
+<text x="430" y="220" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="20" font-weight="600" fill="var(--muted)">Terence Tao</text>
+</g>
+
+  <!-- footer strip -->
+  <rect x="60" y="1004" width="1080" height="128" rx="14" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="2"/>
+  <text x="92" y="1044" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="24" font-weight="800" fill="var(--teal)">In my daily work</text>
+  <text x="92" y="1080" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="22" fill="var(--ink)">More of my work is done with AI &#183; Better models than six months ago &#183; Problems new to me this year</text>
+  <text x="92" y="1112" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="22" fill="var(--muted)">Seen up close in the MCP Gateway Registry and the agentic coding harness benchmarks</text>
+
+  <text x="1140" y="1174" text-anchor="end" font-family='"Segoe UI", Roboto, Helvetica, Arial, sans-serif' font-size="20" fill="var(--muted)">Amit Arora &#183; October 2026 &#183; aarora79.github.io/explainers</text>
+</svg>
+<figcaption>The three ideas on one page. The same picture is available as
+<a href="on-ai-infographic.png">a PNG</a> for the LinkedIn post.</figcaption>
+</div>
+
+<h2>1. The frontier of knowledge is infinite</h2>
+<p>This comes from David Deutsch's <i>The Beginning of Infinity</i>. The frontier of knowledge cannot be known in advance, so we cannot run out of interesting problems to solve. AI speeds up how fast we solve the known ones, and an infinite set of undiscovered ones remains.</p>
+<p class="note"><b>From my work.</b> A year and a half ago, when MCP was just getting traction, I had a hazy idea of one gateway in front of many MCP servers. The <a href="https://github.com/agentic-community/mcp-gateway-registry">MCP Gateway Registry</a> started there. Building it turned up problems I did not start with: path-based routing, virtual MCP servers that mix tools from several servers, interop with other registries. The backlog is growing faster than we can close it.</p>
+
+<h2>2. AI is normal technology</h2>
+<p>This is Sayash Kapoor and Arvind Narayanan's framing. As I read it, the task sets the limit on what AI can do, and tasks come in three kinds.</p>
+<ul>
+  <li>Some have computational limits, where more compute and better models buy better performance.</li>
+  <li>Some have fundamental limits that a better model cannot exceed.</li>
+  <li>Some are gated by verification in the real world, which no model improvement can skip.</li>
+</ul>
+<p class="note"><b>From my work.</b> The <a href="https://github.com/aws-samples/sample-agentic-coding-harness-benchmarks">agentic coding harness benchmarks</a> plot quality against cost across harnesses and models. The Pareto frontier moves when a better model ships. Much of the result still comes from the harness, the task, and whether the tests pass.</p>
+
+<h2>3. Human and machine intelligence share the same space</h2>
+<p>This comes from Terence Tao. He says to drop the pre-Copernican view that puts human intelligence at the center of the universe and to treat human and artificial intelligence as sharing one ontological space. Then the question becomes what a human and a model can do together that neither could do alone.</p>
+<p class="note"><b>From my work.</b> The benchmark uses the registry repo as one of its task sets, so the two projects meet in one place. On the registry, coding agents triage the issue backlog, review pull requests and write much of the code, directed by me through skills I wrote. It is a software factory with a human in the loop, for now at least, with agents and humans working in the same space.</p>
+
+<h2>In my daily work</h2>
+<ul>
+  <li>I do far more of my work with AI now.</li>
+  <li>I explore ideas with better models than I had six months ago.</li>
+  <li>Some of what I work on today, I did not know existed a few months ago.</li>
+</ul>
+
+<h2>Sources</h2>
+<ul>
+  <li><a href="https://teorth.github.io/tao-web/ai-views.html">Terence Tao on AI in mathematics (and beyond)</a> &mdash; the collected views, including the helicopter image, population studies, and answers against insight</li>
+  <li><a href="https://terrytao.wordpress.com/2026/03/29/mathematical-methods-and-human-thought-in-the-age-of-ai/">Mathematical methods and human thought in the age of AI</a> &mdash; Tao, March 2026</li>
+  <li><a href="https://terrytao.wordpress.com/2026/09/24/were-gonna-need-a-lot-more-mathematicians/">We're gonna need a lot more mathematicians</a> &mdash; Amit Sahai, guest post on Tao's blog, on human understanding keeping pace</li>
+  <li>David Deutsch, <i>The Beginning of Infinity</i>, 2011 &mdash; unbounded knowledge growth, and why the content of future knowledge cannot be forecast</li>
+  <li><a href="https://www.normaltech.ai/">AI as Normal Technology</a> &mdash; Arvind Narayanan and Sayash Kapoor; the three-category argument is Kapoor's</li>
+</ul>
+
+<h2>References, ready to paste as a LinkedIn comment</h2>
+<pre class="plain">References for the ideas in the post:
+
+1. Terence Tao on AI in mathematics (and beyond) — the collected views, including the helicopter image, population studies, and answers against insight
+https://teorth.github.io/tao-web/ai-views.html
+
+2. Mathematical methods and human thought in the age of AI — Tao, March 2026
+https://terrytao.wordpress.com/2026/03/29/mathematical-methods-and-human-thought-in-the-age-of-ai/
+
+3. We're gonna need a lot more mathematicians — Amit Sahai, guest post on Tao's blog, on human understanding keeping pace
+https://terrytao.wordpress.com/2026/09/24/were-gonna-need-a-lot-more-mathematicians/
+
+4. David Deutsch, The Beginning of Infinity, 2011 — unbounded knowledge growth, and why the content of future knowledge cannot be forecast
+
+5. AI as Normal Technology — Arvind Narayanan and Sayash Kapoor; the three-category argument is Kapoor's
+https://www.normaltech.ai/</pre>
+
+<footer>Amit Arora, October 2026. The ideas here are borrowed and named; the arrangement is mine.</footer>
+</main>
+</body>
+</html>
