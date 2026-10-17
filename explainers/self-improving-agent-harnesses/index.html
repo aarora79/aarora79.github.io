@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Self-improving agent harnesses: RRSI and Harness²</title>
+<style>
+  :root {
+    --bg: #fffdf5; --surface: #ffffff; --ink: #1d2b2a; --muted: #52615f;
+    --teal: #0f766e; --teal-soft: #e0f2ef; --yellow: #f5c518; --yellow-soft: #fff6cc;
+    --line: #e4e0d0; --code: #f3f1e8; --zebra: #faf8ef;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10191a; --surface: #172224; --ink: #e8efee; --muted: #9fb2b0;
+      --teal: #4fd1c1; --teal-soft: #173a38; --yellow: #f5c518; --yellow-soft: #3a3312;
+      --line: #2a3a3b; --code: #1f2c2e; --zebra: #13201f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.6 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
+  main.wide { max-width: 1280px; padding: 28px 18px 70px; }
+  header { border-left: 6px solid var(--yellow); padding: 4px 0 4px 16px; margin-bottom: 28px; }
+  h1 { margin: 0; font-size: 1.9rem; color: var(--teal); }
+  .sub { color: var(--muted); margin: 4px 0 0; }
+  h2 { font-size: 1.25rem; color: var(--teal); margin: 36px 0 10px;
+    padding-bottom: 6px; border-bottom: 2px solid var(--yellow); }
+  h3 { font-size: 1.05rem; margin: 20px 0 6px; }
+  a { color: var(--teal); }
+  code { background: var(--code); padding: 1px 5px; border-radius: 4px; font-size: .9em; }
+  pre { background: var(--code); border: 1px solid var(--line); border-radius: 8px;
+    padding: 14px 16px; overflow-x: auto; font-size: .85rem; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+  .new { display: inline-block; background: var(--yellow); color: #1d2b2a; font-size: .72rem;
+    font-weight: 700; padding: 1px 8px; border-radius: 999px; vertical-align: middle; margin-left: 6px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--teal);
+    border-radius: 8px; padding: 12px 14px; }
+  .card.accent { border-top-color: var(--yellow); }
+  .card h3 { margin-top: 0; }
+  .card p { margin: 0; }
+  .callout { background: var(--yellow-soft); border-left: 4px solid var(--yellow);
+    padding: 10px 14px; border-radius: 6px; margin: 12px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  th { background: var(--teal-soft); }
+  thead th { position: sticky; top: 0; z-index: 1; border-bottom: 2px solid var(--yellow); }
+  tbody tr:nth-child(even) { background: var(--zebra); }
+  tbody tr:hover { background: var(--teal-soft); }
+  .scroll { overflow-x: auto; }
+  .tag { display: inline-block; font-size: .72rem; background: var(--teal-soft); color: var(--teal);
+    border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; margin: 0 3px 3px 0; }
+  ol.flow li, ul li { margin: 4px 0; }
+  .figwrap { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    padding: 18px; margin: 14px 0; }
+  .figwrap svg { width: 100%; height: auto; display: block; }
+  figcaption { color: var(--muted); font-size: .85rem; margin-top: 10px; }
+  .diag-label { fill: var(--muted); font: 600 13px "Segoe UI", Roboto, sans-serif; }
+  .diag-ink { fill: var(--ink); font-family: "Segoe UI", Roboto, sans-serif; }
+  footer { margin-top: 40px; color: var(--muted); font-size: .85rem; }
+  @media print { body { background: #fff; } main { padding: 0; } h2 { break-after: avoid; }
+    .card, .figwrap { break-inside: avoid; } thead th { position: static; } }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <h1>Self-improving agent harnesses: RRSI and Harness²</h1>
+  <p class="sub">Two Google Cloud AI Research papers, explained together · 100 level · October 2026</p>
+</header>
+
+<h2>What these papers are about</h2>
+<p>An LLM agent is a model plus a harness. The harness holds everything outside the model's weights: the system prompt, standing rules, memory files, skills, helper scripts, tool instructions, and the loop that decides when the agent plans, acts, checks its work, or stops. Both papers show the same model gaining more than ten points on some benchmarks from harness changes alone.</p>
+<p>Most teams tune a harness by hand: an engineer reads failed runs and rewrites prompts. These two papers give that job to an AI. An editor model reads how the agent did, rewrites harness files, tests the edits, and keeps the ones that help. The model's weights never change. When the system's own output shapes its next round of changes, researchers call it recursive self-improvement (RSI).</p>
+
+<div class="cards">
+  <div class="card"><h3>The harness</h3><p>The files around a frozen model: prompts, rules, memory, skills, scripts, tool guidance and the control loop. Every harness edit is a diff to these files.</p></div>
+  <div class="card"><h3>RRSI, September 2026</h3><p>Regularized Recursive Self-Improvement. Tunes one harness on practice tasks before deployment and adds limits so the tuning cannot memorize those tasks.</p></div>
+  <div class="card accent"><h3>Harness², October 2026</h3><p>Recursive Agent Harnessing for an Open World. Improves the harness live, one task at a time, with no answer key, and saves what it learns for the next task.</p></div>
+</div>
+
+<div class="callout">
+  <b>Status:</b> both are arXiv preprints (2609.24972 and 2610.14224). Seven authors appear on both, including Chen-Yu Lee and Tomas Pfister. Harness² publishes code on GitHub. Its reference list does not include RRSI, so read them as parallel projects from one lab.
+</div>
+
+<h2>The core idea: one loop, two problems</h2>
+<p>Both papers run the same loop. An editor model reads the agent's past runs, drafts changes to the harness, runs the agent again with each change, and keeps the changes that look like improvements. The updated harness then produces the runs the editor reads next round. That feedback is what makes the loop recursive.</p>
+<p>The loop needs a signal that says which edits helped, and the two papers differ on where that signal comes from. RRSI has a grader and worries that the loop will learn to please it. Harness² has no grader at all, so it judges edits by comparing how the agent behaved with and without them.</p>
+
+<div class="figwrap">
+<svg viewBox="0 0 820 392" role="img" aria-label="The shared self-improvement loop: the harness feeds runs to a propose step, then a test step, then a keep-or-drop step, which feeds winning edits back into the harness. Below, RRSI adds brakes on a scored practice set, and Harness² judges edits without a grader and keeps a library of lessons.">
+  <defs>
+    <marker id="arw" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 z" fill="#7c8c8a"/>
+    </marker>
+  </defs>
+
+  <rect x="250" y="14" width="320" height="56" rx="10" fill="var(--teal-soft)" stroke="var(--teal)" stroke-width="1.5"/>
+  <text x="410" y="40" text-anchor="middle" class="diag-ink" font-size="16" font-weight="600">Harness around a frozen model</text>
+  <text x="410" y="60" text-anchor="middle" class="diag-ink" font-size="12.5">prompts, rules, memory, skills, scripts, tools</text>
+
+  <line x1="290" y1="70" x2="170" y2="116" stroke="#7c8c8a" stroke-width="2" marker-end="url(#arw)"/>
+  <text x="140" y="94" class="diag-label">agent runs</text>
+
+  <line x1="650" y1="118" x2="534" y2="73" stroke="#7c8c8a" stroke-width="2" marker-end="url(#arw)"/>
+  <text x="622" y="94" class="diag-label">winning edits</text>
+
+  <rect x="40" y="120" width="220" height="72" rx="12" fill="#0f766e"/>
+  <text x="150" y="150" text-anchor="middle" fill="#fbf8ee" font-size="18" font-weight="700" font-family="Segoe UI, Roboto, sans-serif">1. Propose</text>
+  <text x="150" y="174" text-anchor="middle" fill="#cde7e3" font-size="13" font-family="Segoe UI, Roboto, sans-serif">an LLM drafts harness edits</text>
+
+  <line x1="260" y1="156" x2="296" y2="156" stroke="#7c8c8a" stroke-width="2" marker-end="url(#arw)"/>
+
+  <rect x="300" y="120" width="220" height="72" rx="12" fill="#0f766e"/>
+  <text x="410" y="150" text-anchor="middle" fill="#fbf8ee" font-size="18" font-weight="700" font-family="Segoe UI, Roboto, sans-serif">2. Test</text>
+  <text x="410" y="174" text-anchor="middle" fill="#cde7e3" font-size="13" font-family="Segoe UI, Roboto, sans-serif">run the agent with each edit</text>
+
+  <line x1="520" y1="156" x2="556" y2="156" stroke="#7c8c8a" stroke-width="2" marker-end="url(#arw)"/>
+
+  <rect x="560" y="120" width="220" height="72" rx="12" fill="#f5c518"/>
+  <text x="670" y="150" text-anchor="middle" fill="#10302e" font-size="18" font-weight="700" font-family="Segoe UI, Roboto, sans-serif">3. Keep or drop</text>
+  <text x="670" y="174" text-anchor="middle" fill="#10302e" font-size="13" font-family="Segoe UI, Roboto, sans-serif">adopt the edits that helped</text>
+
+  <line x1="220" y1="236" x2="220" y2="198" stroke="#7c8c8a" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arw)"/>
+  <line x1="480" y1="236" x2="480" y2="198" stroke="#7c8c8a" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arw)"/>
+
+  <rect x="40" y="240" width="360" height="138" rx="10" fill="var(--surface)" stroke="var(--teal)" stroke-width="1.5"/>
+  <text x="60" y="268" fill="var(--teal)" font-size="16" font-weight="700" font-family="Segoe UI, Roboto, sans-serif">RRSI adds brakes</text>
+  <text x="60" y="294" class="diag-ink" font-size="13.5">Before deployment, on fixed practice tasks</text>
+  <text x="60" y="316" class="diag-ink" font-size="13.5">A grader scores every candidate harness</text>
+  <text x="60" y="338" class="diag-ink" font-size="13.5">Limits on edit count, leaks, noise, cost</text>
+  <text x="60" y="360" class="diag-ink" font-size="13.5">Output: one harness, shipped unchanged</text>
+
+  <rect x="420" y="240" width="360" height="138" rx="10" fill="var(--surface)" stroke="#f5c518" stroke-width="2"/>
+  <text x="440" y="268" fill="var(--teal)" font-size="16" font-weight="700" font-family="Segoe UI, Roboto, sans-serif">Harness² adds memory</text>
+  <text x="440" y="294" class="diag-ink" font-size="13.5">During deployment, one new task at a time</text>
+  <text x="440" y="316" class="diag-ink" font-size="13.5">No grader: compare runs side by side</text>
+  <text x="440" y="338" class="diag-ink" font-size="13.5">Lessons go to a library after each task</text>
+  <text x="440" y="360" class="diag-ink" font-size="13.5">Output: a harness per task, a growing library</text>
+</svg>
+<figcaption>Solid arrows trace the loop both papers share. Dashed arrows mark where each paper changes it. RRSI limits what the editor may propose, and its noise and cost rules also decide what it may keep. Harness² changes the test step: it compares runs side by side because it has no grader to ask.</figcaption>
+</div>
+
+<h2>RRSI: tuning on practice tasks without memorizing them</h2>
+<p>RRSI starts from a fixed set of practice tasks with a grader, such as unit tests or a judge model with a rubric. The loop runs 20 to 40 rounds over those same tasks. Each round, the editor proposes candidate harnesses, the agent runs each one on the practice set, and the top scorer becomes the new harness.</p>
+<p>Scoring against the same tasks every round invites overfitting. A student who drills one practice exam can ace it and still fail the real test, and the editor does the same thing: it learns what this grader rewards and what these documents look like. The authors name three ways it happens: edits that encode benchmark details, edits that win on run-to-run noise, and edits that add machinery and token cost with no better method underneath.</p>
+<p>RRSI leaves every harness file open to editing and limits how the search moves through them. The authors borrow the names from regularization in machine learning:</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th>Brake</th><th>What it does</th><th>ML idea it borrows</th></tr></thead>
+  <tbody>
+    <tr><td><b>Edit budget</b></td><td>Early rounds may bundle 3 or 4 edits. The budget shrinks to 1 by the last round, so every late gain traces to one change.</td><td>L0: cap how many things change</td></tr>
+    <tr><td><b>Leak critic</b></td><td>A model reads each diff before it runs and rejects edits that name tasks, entities, answers, or benchmark-specific logic.</td><td>Keep test data out of training</td></tr>
+    <tr><td><b>Noise floor</b></td><td>RRSI first measures how much the unchanged harness's score wobbles between runs. A gain smaller than the wobble earns no credit, and no candidate may score below the best so far minus the wobble.</td><td>Reusable holdout sets</td></tr>
+    <tr><td><b>Cost cap</b></td><td>A candidate that spends more tokens must show a bigger gain. On coding tasks, each extra solved task buys 25 percent more tokens on top of a 10 percent base allowance.</td><td>L2: shrink total size</td></tr>
+    <tr><td><b>Pruning</b></td><td>A component that produced no gain over the last four or five rounds goes on a deletion list for the editor.</td><td>L1: delete what does not pay</td></tr>
+    <tr><td><b>Exploration</b></td><td>When progress stalls, the editor must spend part of its budget on components it has not touched yet.</td><td>Entropy bonus</td></tr>
+  </tbody>
+</table>
+</div>
+<p>RRSI also logs every tested edit with its hypothesis and result, so the editor stops retrying ideas that already failed. The authors call the L0, L1 and L2 labels analogies. RRSI does not optimize those penalties.</p>
+
+<h3>What happened</h3>
+<p>The authors tuned harnesses in three areas: coding, legal and office work, and engineering design. They then ran each harness unchanged on benchmarks the loop never saw. Claude Opus 4.8 served as the agent's model and as the editor. In the office-work area, tuned on Harvey's legal benchmark (LAB):</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th>Method</th><th>LAB practice set</th><th>Unseen benchmarks, average</th></tr></thead>
+  <tbody>
+    <tr><td>Starting harness</td><td>89.4</td><td>39.7</td></tr>
+    <tr><td>Meta-Harness</td><td>93.0</td><td>40.6</td></tr>
+    <tr><td>HarnessX</td><td>91.8</td><td>39.7</td></tr>
+    <tr><td>TTHE</td><td>91.1</td><td>38.0</td></tr>
+    <tr><td>AHE</td><td>90.7</td><td>39.2</td></tr>
+    <tr><td><b>RRSI</b></td><td>90.5</td><td><b>43.6</b></td></tr>
+  </tbody>
+</table>
+</div>
+<p class="sub">Unseen average covers JobBench, GDPval and APEX-Agents, from the paper's Table 1.</p>
+<p>RRSI posted the smallest practice-set gain of any tuned harness and the only unseen gain above one point. Two prior methods ended below the harness they started from. RRSI's harness used 2.42 million tokens per trial, against 3.80 million for the same loop with every brake removed. On engineering tasks, where simulators grade the work with no judge model, the unseen Frontier-Eng benchmark rose 4.3 points. A harness tuned with Gemini 3.5 Flash also helped a smaller model, Gemini 3.1 Flash Lite, that never took part in the search.</p>
+
+<h3>What the brakes kept out</h3>
+<p>The paper puts the final harnesses side by side. Meta-Harness ended with a 730-word standing instruction that restates how the practice set grades work. TTHE carried about 8,500 words of protocol, including 1,000 words that apply only to redlined legal documents, a format the unseen benchmarks never ask for. RRSI accepted 4 of 32 candidates. All four hook into the check the agent already ran before finishing: re-read the deliverable and report what is missing, such as a source value that appears in no written file.</p>
+
+<h2>Harness²: improving live, with no answer key</h2>
+<p>Harness² works in a different setting. Tasks arrive one at a time during real use, nobody has seen them before, and no grader says whether an answer is right. The system may rerun the current task within a budget, but it never goes back to finished tasks. With no practice set to score against, RRSI's approach cannot run here, so Harness² works at two levels.</p>
+
+<h3>Level one: fix the harness for this task</h3>
+<ol class="flow">
+  <li><b>Run once.</b> The agent attempts the task with the starting harness. This run shows how the harness behaves. It says nothing about whether the answer is right.</li>
+  <li><b>Propose two edits.</b> One editor targets how the agent works: planning, tool use, managing its context, checking its own output. A second targets what an expert in the domain knows, such as the sections a legal memo needs or the checks an analyst runs on a budget.</li>
+  <li><b>Probe.</b> The agent runs again with each edited harness, on the same task with the same model and setup. Comparing each new run with the first shows whether the targeted failure went away, stayed, or got worse.</li>
+  <li><b>Compose.</b> A composer reads all the runs and diffs and builds the final harness. It may merge both edits, keep one, revise them, or keep the original. Each decision must point to something it saw in a run.</li>
+  <li><b>Pick an output.</b> With a bigger budget of k candidates, run in parallel or as k rounds in a row, a blind selector compares the finished deliverables against the request and source files and picks one. It does not know which harness made which output.</li>
+</ol>
+
+<h3>Level two: get better at fixing</h3>
+<p>After each task, a reflector reviews the full record and writes down which changes fixed which problems, and under what conditions. It saves the adopted harness and an <code>EXPERIENCE.md</code> note to a library. The next task starts again from the plain harness, but the editors can read the library and copy or adapt its components. The model, the prompts and the procedure stay fixed while the library grows. This second loop explains the name: the system improves the harness, and it also improves the process that improves the harness.</p>
+
+<p>The editor can change eight kinds of file, and each has a different cost:</p>
+<div class="scroll">
+<table>
+  <thead><tr><th>Components</th><th>When the model sees them</th><th>Cost</th></tr></thead>
+  <tbody>
+    <tr><td>System prompt, guardrails, memory, tool guidance</td><td>Every call</td><td>Tokens on every turn of every run</td></tr>
+    <tr><td>Skills, scripts, subagents</td><td>Only when invoked</td><td>Nothing until used; a subagent works in its own context and returns a short answer</td></tr>
+    <tr><td>Plugin</td><td>Inside the tool loop, on every tool call</td><td>No prompt tokens, and the model cannot skip it</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>What happened</h3>
+<p>Gemini 3.5 Flash and GLM-5 did the work, each inside two stock coding agents, OpenCode and Codex. Claude Opus 4.8 did the editing. The benchmarks were WorkBuddy-Bench (code, web and office tasks), JobBench (professional job tasks) and Harvey's LAB.</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th>Benchmark</th><th>Setup</th><th>Starting harness</th><th>One step</th><th>Gain</th></tr></thead>
+  <tbody>
+    <tr><td>WorkBuddy-Bench, average</td><td>GLM-5, OpenCode</td><td>64.2</td><td>75.7</td><td>+11.5</td></tr>
+    <tr><td>JobBench</td><td>Gemini 3.5 Flash, OpenCode</td><td>31.5</td><td>36.0</td><td>+4.5</td></tr>
+    <tr><td>LAB, criteria passed</td><td>GLM-5, OpenCode</td><td>59.6</td><td>71.4</td><td>+11.8</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="sub">Largest one-step gain on each benchmark, from the paper's Tables 1 and 2.</p>
+<p>A single improvement step beat the starting harness in all twelve benchmark and setup pairs. Running five candidates in parallel added another 2.6 to 6.7 points. With its improved harness, GLM-5 outscored Gemini 3.5 Flash on its stock harness on WorkBuddy-Bench. Removing the library cost 3.1 points on WorkBuddy-Bench and 1.8 on JobBench, and a library built on JobBench still helped on WorkBuddy-Bench. The gains held when one model did both the work and the editing, for all five models tested, from GLM-5 to Claude Opus 5.</p>
+<p>Harness² spends more compute per task than a single run. The paper counts every token, editing included, and both budgets it tested sit on the best cost-for-gain curve among the methods it compared.</p>
+
+<h2>Side by side</h2>
+<div class="scroll">
+<table>
+  <thead><tr><th></th><th>RRSI</th><th>Harness²</th></tr></thead>
+  <tbody>
+    <tr><td><b>When it runs</b></td><td>Before deployment, on a fixed practice set</td><td>During deployment, one task at a time</td></tr>
+    <tr><td><b>Signal for keeping an edit</b></td><td>Scores from a grader</td><td>Comparison of runs with and without the edit</td></tr>
+    <tr><td><b>What it produces</b></td><td>One harness, shipped unchanged</td><td>A harness per task and a growing library of lessons</td></tr>
+    <tr><td><b>Main worry</b></td><td>Overfitting to the practice set</td><td>No answer key, and lessons that fail to carry over</td></tr>
+    <tr><td><b>Compute</b></td><td>Cuts token cost of the final harness</td><td>Spends extra runs per task to gain points</td></tr>
+    <tr><td><b>Editor model</b></td><td>Claude Opus 4.8</td><td>Claude Opus 4.8</td></tr>
+    <tr><td><b>Shared benchmarks</b></td><td colspan="2">JobBench and Harvey's LAB, with Meta-Harness as a baseline in both</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>Where they meet and where they clash</h2>
+
+<h3>Both found the same habit</h3>
+<p>The edits that survived in both papers make the agent reopen and check its own deliverable before it stops. RRSI's four accepted edits all sit in the pre-finish check. In a Harness² case study on JobBench, the score rose from 43.1 to 77.8 after the editor added two things: a rule to trace every figure to its source file, and a script that reopens each output file and flags spreadsheet cells a reader would see as blank.</p>
+
+<h3>Opposite rules about task facts</h3>
+<p>The Harness² editor prompt tells the editor to write verified facts about the current workspace into the harness, for example "role X in file A maps to position Y in file B." RRSI's critic rejects any edit that names task entities or values. Each rule fits its setting. Harness² builds a harness for the task in front of it, and when a later task borrows from the library, the prompt tells the editor to treat old facts as guesses and check them again. RRSI ships one harness to benchmarks it never saw, so a task fact in that harness can only overfit.</p>
+
+<h3>Meta-Harness gets two verdicts</h3>
+<p>In RRSI, Meta-Harness posted the best practice score and almost no gain on unseen benchmarks. In Harness², Meta-Harness, tuned offline on separate tasks from the same benchmarks, was the strongest baseline. Both results fit RRSI's argument: offline tuning pays off when test tasks resemble the training tasks and fades when they differ.</p>
+
+<h3>Could you combine them?</h3>
+<p>This part is my reading, not a claim in either paper. The Harness² library grows with every task and nothing prunes it. The authors list consolidating the library as future work. RRSI's pruning rule and leak critic look like the right tools for that job.</p>
+
+<h2>Limits and what to check</h2>
+<div class="cards">
+  <div class="card"><h3>RRSI needs a practice set</h3><p>It still tunes against a finite task set and several hand-set limits: the noise band, the edit budget, the cost allowance. The authors fixed these before each run and never tuned them on unseen benchmarks.</p></div>
+  <div class="card"><h3>The ML names are labels</h3><p>The authors say so themselves. The brakes are rules of thumb named after L0, L1 and L2, and RRSI optimizes no penalty.</p></div>
+  <div class="card accent"><h3>Harness² pays per task</h3><p>Every task costs extra runs and editor sessions. Parallel runs shorten the wait, but total compute stays the same.</p></div>
+  <div class="card accent"><h3>Comparing runs cannot prove correctness</h3><p>The failure analysis shows the blind selector picking a 55-point output over a 95-point one, and one edit that wrote a wrong rule into every candidate.</p></div>
+  <div class="card"><h3>Judges grade most benchmarks</h3><p>LAB, JobBench, GDPval and parts of WorkBuddy-Bench use LLM judges. RRSI's engineering results come from simulators, which makes them the best check against a harness that learns to please the judge.</p></div>
+</div>
+
+<h2>Further reading</h2>
+<ul>
+  <li><a href="https://arxiv.org/pdf/2609.24972">RRSI: Regularized Recursive Self-Improvement of Agent Harnesses</a>: the full paper, with the brake formulas in Appendix D and the final-harness comparison in Table 9.</li>
+  <li><a href="https://arxiv.org/pdf/2610.14224">Harness²: Recursive Agent Harnessing for an Open World</a>: the full paper, with every editor, composer and selector prompt in Appendix H.</li>
+  <li><a href="https://github.com/google-research/harness2">google-research/harness2</a>: the Harness² code release.</li>
+  <li><a href="https://harness2.github.io">harness2.github.io</a>: the Harness² project page.</li>
+</ul>
+
+<footer>Prepared by Amit Arora, Principal Solutions Architect – AI/ML, AWS.</footer>
+</main>
+</body>
+</html>
