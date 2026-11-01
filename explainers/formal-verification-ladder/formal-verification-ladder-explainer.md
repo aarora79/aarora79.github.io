@@ -261,7 +261,33 @@ E           host='10.0',
 FAILED test_rung2_property.py::test_guard_agrees_with_the_os
 ```
 
-Hypothesis found a disagreement and shrank it to `"10.0"`. The OS reads a two-part address as `10.0.0.0`, which is private. The guard sees two parts instead of four and waves it through as a hostname.
+Hypothesis found a disagreement and shrank it to `"10.0"`. The guard and the oracle both read that string, and they take it to mean different things: the guard decides it is not an IP address and lets it through as a hostname, while the OS decides it is the private address `10.0.0.0`.
+
+### Dry run: one string, two readings
+
+Following `"10.0"` through both functions, a line at a time, shows where they part. The values come from running the demo code.
+
+| Step | The guard: `is_blocked("10.0")` | The oracle: `os_reaches_blocked("10.0")` |
+|---|---|---|
+| 1 | `parse_ipv4` splits on dots and gets `["10", "0"]`: two parts. | It calls `socket.inet_aton("10.0")`, the C function the OS uses to connect. |
+| 2 | It needs exactly four parts, so it returns `None`: "not an IP address". | `inet_aton` accepts the two-part form `a.b`: `a` is the first byte, and `b` fills the other three. The bytes are `[10, 0, 0, 0]`. |
+| 3 | `is_blocked` sees `None` and takes the hostname branch. | Those bytes are the address `10.0.0.0`, inside the blocked range `10.0.0.0/8`. |
+| Result | **`False`: not blocked** | **`True`: a private address** |
+
+The property compares the two results, `False == True`, and fails. In a running service, a request to `http://10.0/` gets past the guard, and the OS connects to `10.0.0.0` on the internal network.
+
+Each function follows its own rules correctly. The guard does what it was written to do, four decimal numbers or a hostname, and `inet_aton` does what its manual page says. The bug exists only in the gap between them, which is why a test that compares the two finds it and a test of either one alone does not.
+
+Shrinking explains why the report says `10.0` and not something longer. Hypothesis keeps the smallest input that still fails, and the inputs next to it pass:
+
+| Host | Guard | OS reads | Oracle | Agree? |
+|---|---|---|---|---|
+| `10` | not blocked | `0.0.0.10`, public | not blocked | yes |
+| `0.0` | not blocked | `0.0.0.0`, not in a range | not blocked | yes |
+| `10.0` | not blocked | `10.0.0.0`, private | blocked | **no** |
+| `10.0.0.0` | blocked | `10.0.0.0`, private | blocked | yes |
+
+One part is too few to fail: `inet_aton` reads a single part as the whole 32-bit number, so `10` means the public `0.0.0.10`. Four parts are too many, because the guard reads four parts correctly. Two parts is the smallest count that fails, and 10 is the smallest number in the test's list of interesting values that makes the address private. The same gap lets `127.0`, `10.1` and `10.300` through; the OS reads the last one as `10.0.1.44`.
 
 > #### The generator decides what the test can find
 >

@@ -403,7 +403,43 @@ def test_guard_agrees_with_the_os(
 <pre><code class="language-text">E           host='10.0',
 FAILED test_rung2_property.py::test_guard_agrees_with_the_os</code></pre>
 
-<p>Hypothesis found a disagreement and shrank it to <code>"10.0"</code>. The OS reads a two-part address as <code>10.0.0.0</code>, which is private. The guard sees two parts instead of four and waves it through as a hostname.</p>
+<p>Hypothesis found a disagreement and shrank it to <code>"10.0"</code>. The guard and the oracle both read that string, and they take it to mean different things: the guard decides it is not an IP address and lets it through as a hostname, while the OS decides it is the private address <code>10.0.0.0</code>.</p>
+
+<h3>Dry run: one string, two readings</h3>
+
+<p>Following <code>"10.0"</code> through both functions, a line at a time, shows where they part. The values come from running the demo code.</p>
+
+<div class="tablebox">
+<table>
+<thead><tr><th>Step</th><th>The guard: <code>is_blocked("10.0")</code></th><th>The oracle: <code>os_reaches_blocked("10.0")</code></th></tr></thead>
+<tbody>
+<tr><td>1</td><td><code>parse_ipv4</code> splits on dots and gets <code>["10", "0"]</code>: two parts.</td><td>It calls <code>socket.inet_aton("10.0")</code>, the C function the OS uses to connect.</td></tr>
+<tr><td>2</td><td>It needs exactly four parts, so it returns <code>None</code>: "not an IP address".</td><td><code>inet_aton</code> accepts the two-part form <code>a.b</code>: <code>a</code> is the first byte, and <code>b</code> fills the other three. The bytes are <code>[10, 0, 0, 0]</code>.</td></tr>
+<tr><td>3</td><td><code>is_blocked</code> sees <code>None</code> and takes the hostname branch.</td><td>Those bytes are the address <code>10.0.0.0</code>, inside the blocked range <code>10.0.0.0/8</code>.</td></tr>
+<tr><td>Result</td><td><strong><code>False</code>: not blocked</strong></td><td><strong><code>True</code>: a private address</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>The property compares the two results, <code>False == True</code>, and fails. In a running service, a request to <code>http://10.0/</code> gets past the guard, and the OS connects to <code>10.0.0.0</code> on the internal network.</p>
+
+<p>Each function follows its own rules correctly. The guard does what it was written to do, four decimal numbers or a hostname, and <code>inet_aton</code> does what its manual page says. The bug exists only in the gap between them, which is why a test that compares the two finds it and a test of either one alone does not.</p>
+
+<p>Shrinking explains why the report says <code>10.0</code> and not something longer. Hypothesis keeps the smallest input that still fails, and the inputs next to it pass:</p>
+
+<div class="tablebox">
+<table>
+<thead><tr><th>Host</th><th>Guard</th><th>OS reads</th><th>Oracle</th><th>Agree?</th></tr></thead>
+<tbody>
+<tr><td><code>10</code></td><td>not blocked</td><td><code>0.0.0.10</code>, public</td><td>not blocked</td><td>yes</td></tr>
+<tr><td><code>0.0</code></td><td>not blocked</td><td><code>0.0.0.0</code>, not in a range</td><td>not blocked</td><td>yes</td></tr>
+<tr><td><code>10.0</code></td><td>not blocked</td><td><code>10.0.0.0</code>, private</td><td>blocked</td><td><strong>no</strong></td></tr>
+<tr><td><code>10.0.0.0</code></td><td>blocked</td><td><code>10.0.0.0</code>, private</td><td>blocked</td><td>yes</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>One part is too few to fail: <code>inet_aton</code> reads a single part as the whole 32-bit number, so <code>10</code> means the public <code>0.0.0.10</code>. Four parts are too many, because the guard reads four parts correctly. Two parts is the smallest count that fails, and 10 is the smallest number in the test's list of interesting values that makes the address private. The same gap lets <code>127.0</code>, <code>10.1</code> and <code>10.300</code> through; the OS reads the last one as <code>10.0.1.44</code>.</p>
 
 <aside class="callout">
 <h4>The generator decides what the test can find</h4>
