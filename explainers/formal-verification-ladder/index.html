@@ -321,6 +321,24 @@ def test_allows_public() -&gt; None:
 
 <p>All three pass, because the author wrote every input the way they thought of it. Nobody writes <code>assert is_blocked("0177.0.0.1")</code> without already knowing that octal is a problem, and an agent that does not know about octal writes the same three tests. Example tests are still worth having: they are quick to read and they document intent. They cannot find the case nobody imagined.</p>
 
+<h3>Dry run: what the three tests exercise</h3>
+
+<p>Following each test input through <code>is_blocked</code> shows which branch it takes:</p>
+
+<div class="tablebox">
+<table>
+<thead><tr><th>Input</th><th><code>parse_ipv4</code> returns</th><th>Branch taken</th><th>Result</th><th>Test expects</th></tr></thead>
+<tbody>
+<tr><td><code>127.0.0.1</code></td><td><code>[127, 0, 0, 1]</code></td><td><code>a == 127</code></td><td><code>True</code></td><td><code>True</code></td></tr>
+<tr><td><code>10.0.0.5</code></td><td><code>[10, 0, 0, 5]</code></td><td><code>a == 10</code></td><td><code>True</code></td><td><code>True</code></td></tr>
+<tr><td><code>192.168.1.20</code></td><td><code>[192, 168, 1, 20]</code></td><td>last line, <code>a == 192 and b == 168</code></td><td><code>True</code></td><td><code>True</code></td></tr>
+<tr><td><code>8.8.8.8</code></td><td><code>[8, 8, 8, 8]</code></td><td>last line, false</td><td><code>False</code></td><td><code>False</code></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Every input is four decimal numbers, so every one takes the happy path through <code>parse_ipv4</code>. Measured with <code>coverage.py</code>, the three tests run 15 of the guard's 21 statements. The six they never reach include line 26, the <code>return False</code> for anything that is not four numbers, which is where <code>10.0</code> escapes in rung 2, and line 31, the <code>172</code> branch that holds the typo. A test cannot catch a bug on a line it never runs. Running a line is not enough either: a test with <code>172.20.1.1</code> would run line 31 and still pass, because the typo only shows at <code>172.32</code>.</p>
+
 <h2 id="rung-2-property-based-testing">Rung 2: property-based testing</h2>
 
 <p>A <strong>property-based test</strong> states the property and lets a library generate the inputs. Hypothesis is the standard Python library for this. You describe the shape of the inputs with a <strong>strategy</strong>, a recipe for generating one kind of value, and Hypothesis runs the test on 100 fresh inputs by default.</p>
@@ -490,7 +508,41 @@ E         0x7f.0.0.1</code></pre>
 
 <p>The first test finds the typo and nothing else. Out of 65,536 pairs, only <code>172.32</code> gets the wrong answer, and once you fix the typo the loop proves the range check right for every address.</p>
 
-<p>The second test finds six spellings the guard gets wrong, in both directions. Four get through: <code>012</code> is octal for 10, <code>0xa</code> is hex for 10, and <code>0177</code> and <code>0x7f</code> are both 127. Two get blocked by mistake: the guard reads <code>010</code> as 10 and <code>0127</code> as 127, while the OS reads them as octal 8 and 87, both public.</p>
+<h3>Dry run: one slice of each sweep</h3>
+
+<p>In the first test, the slice where <code>a</code> is 172 shows the typo. The guard's check reads <code>16 &lt;= b &lt;= 32</code>, and the range it is meant to match ends at 31:</p>
+
+<div class="tablebox">
+<table>
+<thead><tr><th><code>b</code></th><th>Host</th><th>Guard</th><th>OS (oracle)</th><th>Agree?</th></tr></thead>
+<tbody>
+<tr><td>15</td><td><code>172.15.0.1</code></td><td>allowed</td><td>allowed</td><td>yes</td></tr>
+<tr><td>16</td><td><code>172.16.0.1</code></td><td>blocked</td><td>blocked</td><td>yes</td></tr>
+<tr><td>31</td><td><code>172.31.0.1</code></td><td>blocked</td><td>blocked</td><td>yes</td></tr>
+<tr><td>32</td><td><code>172.32.0.1</code></td><td>blocked</td><td>allowed</td><td><strong>no</strong></td></tr>
+<tr><td>33</td><td><code>172.33.0.1</code></td><td>allowed</td><td>allowed</td><td>yes</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Only one pair out of 65,536 disagrees, so a random sampler that draws 100 pairs has about a 1 in 650 chance of landing on it. The loop lands on it every time.</p>
+
+<p>In the second test, the spellings of 10 and 127 show the parsing gap. Python's <code>int()</code> reads a leading zero as decimal, so <code>int("012")</code> is 12. <code>inet_aton</code> reads a leading zero as octal, so <code>012</code> is 10:</p>
+
+<div class="tablebox">
+<table>
+<thead><tr><th>Host</th><th>Guard reads</th><th>Guard</th><th>OS reads</th><th>OS (oracle)</th><th>Agree?</th></tr></thead>
+<tbody>
+<tr><td><code>10.0.0.1</code></td><td>10</td><td>blocked</td><td><code>10.0.0.1</code></td><td>blocked</td><td>yes</td></tr>
+<tr><td><code>012.0.0.1</code></td><td>12</td><td>allowed</td><td><code>10.0.0.1</code></td><td>blocked</td><td><strong>no</strong>: gets through</td></tr>
+<tr><td><code>0xa.0.0.1</code></td><td>not a number: hostname</td><td>allowed</td><td><code>10.0.0.1</code></td><td>blocked</td><td><strong>no</strong>: gets through</td></tr>
+<tr><td><code>010.0.0.1</code></td><td>10</td><td>blocked</td><td><code>8.0.0.1</code></td><td>allowed</td><td><strong>no</strong>: blocked by mistake</td></tr>
+<tr><td><code>0177.0.0.1</code></td><td>177</td><td>allowed</td><td><code>127.0.0.1</code></td><td>blocked</td><td><strong>no</strong>: gets through</td></tr>
+<tr><td><code>0x7f.0.0.1</code></td><td>not a number: hostname</td><td>allowed</td><td><code>127.0.0.1</code></td><td>blocked</td><td><strong>no</strong>: gets through</td></tr>
+<tr><td><code>0127.0.0.1</code></td><td>127</td><td>blocked</td><td><code>87.0.0.1</code></td><td>allowed</td><td><strong>no</strong>: blocked by mistake</td></tr>
+</tbody>
+</table>
+</div>
 
 <p>The proof covers only the set you chose. The first test needed the insight that only two octets matter, and the second covers only one part of the address. Neither says anything about a spelling like <code>127.1</code>. Picking the set is where the judgment goes.</p>
 
@@ -593,7 +645,28 @@ E       state.fetch_page()
 E       state.never_connected_to_a_blocked_address()
 E       state.teardown()</code></pre>
 
-<p>Hypothesis checks the invariant before and after every step, and the shortest failing sequence has two steps: the DNS answer changes, then the client fetches a page. The first lookup returns the public address, which passes the check, and the second returns loopback, which the client connects to. No input to <code>is_blocked</code> is wrong here, so rungs 1 to 3 cannot see this bug at all. The fix is in <code>fetch</code>: look the name up once, check that address, and connect to that same address.</p>
+<p>Hypothesis checks the invariant before and after every step, and the shortest failing sequence has two steps. No input to <code>is_blocked</code> is wrong here, so rungs 1 to 3 cannot see this bug at all.</p>
+
+<h3>Dry run: the two-step sequence</h3>
+
+<p>Replaying the failing sequence with a log on the fake DNS server shows the queue of answers at each step:</p>
+
+<div class="tablebox">
+<table>
+<thead><tr><th>Step</th><th>What happens</th><th>DNS queue afterwards</th><th>Connections</th></tr></thead>
+<tbody>
+<tr><td>Start</td><td>The fake DNS holds one answer.</td><td><code>[93.184.216.34]</code></td><td><code>[]</code></td></tr>
+<tr><td>1</td><td><code>dns_changes('127.0.0.1')</code> queues a second answer.</td><td><code>[93.184.216.34, 127.0.0.1]</code></td><td><code>[]</code></td></tr>
+<tr><td>2a</td><td><code>fetch_page</code>: lookup 1 returns <code>93.184.216.34</code>, and <code>is_blocked</code> says <code>False</code>, so the fetch carries on.</td><td><code>[127.0.0.1]</code></td><td><code>[]</code></td></tr>
+<tr><td>2b</td><td>Lookup 2 returns <code>127.0.0.1</code>, and the client connects to it.</td><td><code>[127.0.0.1]</code></td><td><code>[127.0.0.1]</code></td></tr>
+<tr><td>Check</td><td>The invariant asks the oracle about each connection: <code>127.0.0.1</code> is blocked.</td><td></td><td><strong>fails</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>The guard answered correctly both times it was asked. It was asked about the wrong address: the one from lookup 1, while the connection used lookup 2. Without step 1 both lookups return the public address and the test passes, which is why Hypothesis could not shrink the sequence below two steps. A real attacker gets the same effect from a DNS server that answers with a time-to-live of zero, so the second lookup goes back to the server instead of reusing the first answer.</p>
+
+<p>The fix is in <code>fetch</code>: look the name up once, check that address, and connect to that same address.</p>
 
 <h2 id="rung-5-a-solver">Rung 5: a solver</h2>
 
@@ -638,6 +711,24 @@ fixed (b &lt;= 31): no counterexample in all 2**32 addresses</code></pre>
 
 <p>For the code as written, Z3 returns <code>172.32.255.255</code>, inside the range the guard blocks and outside the one the specification names. For the fixed check it answers that the formula is <strong>unsatisfiable</strong>: no assignment of four octets makes them disagree. That covers all 4,294,967,296 addresses, and Z3 did not try any of them. It reasoned about the arithmetic instead.</p>
 
+<h3>Dry run: what Z3 is asked, and what it answers</h3>
+
+<p>The line <code>guard != spec</code> asks whether the two can disagree in either direction. Splitting it into its two halves shows which half fails:</p>
+
+<div class="tablebox">
+<table>
+<thead><tr><th>Question</th><th>As written (<code>b &lt;= 32</code>)</th><th>Fixed (<code>b &lt;= 31</code>)</th></tr></thead>
+<tbody>
+<tr><td>Can the guard block an address the spec allows?</td><td>satisfiable: <code>172.32.255.255</code></td><td>unsatisfiable</td></tr>
+<tr><td>Can the spec cover an address the guard misses?</td><td>unsatisfiable</td><td>unsatisfiable</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>The counterexample checks out by hand. As one number, <code>172.32.255.255</code> is 172 × 2<sup>24</sup> + 32 × 2<sup>16</sup> + 255 × 2<sup>8</sup> + 255 = 2,887,843,839. The spec's range ends at 2,887,778,303, so the spec says allowed, while the guard sees <code>a = 172</code> and <code>b = 32</code> and blocks it. Any values of <code>c</code> and <code>d</code> would do; Z3 returns whichever model it finds first.</p>
+
+<p>For the fixed check, Z3 reaches "unsatisfiable" through rules of arithmetic rather than by trying values. The argument it settles is the one you would make on paper. If the guard blocks, then <code>a = 172</code> and <code>b</code> is between 16 and 31, so the address lies between <code>172.16.0.0</code> and <code>172.31.255.255</code>, inside the spec. If the spec covers an address, it lies in that same range, which forces <code>a = 172</code> and <code>b</code> between 16 and 31, so the guard blocks. Neither half has a solution, and that covers every address without listing one.</p>
+
 <p>Solvers have limits. This one checked a formula that a person wrote to match the Python, not the Python itself, and the parsing bug never appears in the formula. Tools such as CrossHair run a solver over the Python functions themselves, and they handle small pure functions over numbers well. Strings, regular expressions and network calls are much harder for them.</p>
 
 <h2 id="rung-6-a-machine-checked-proof">Rung 6: a machine-checked proof</h2>
@@ -679,7 +770,28 @@ where
  f := ↑c
  g := ↑d</code></pre>
 
-<p>The message points at <code>b</code>, the second octet, near 32: the same <code>172.32</code> the solver found.</p>
+<h3>Dry run: the proof one tactic at a time</h3>
+
+<p>Lean can print its <strong>goal</strong>, the statement still left to prove, between tactics. Before <code>unfold</code>, the goal names the three definitions, with the four hypotheses listed above it:</p>
+
+<pre><code class="language-text">a b c d : Nat
+ha : a &lt; 256
+hb : b &lt; 256
+hc : c &lt; 256
+hd : d &lt; 256
+⊢ guard172 a b ↔ inPrivate172 (toNat a b c d)</code></pre>
+
+<p>After <code>unfold</code>, each name is replaced by its definition, and the goal is plain arithmetic over whole numbers:</p>
+
+<pre><code class="language-text">⊢ a = 172 ∧ 16 ≤ b ∧ b ≤ 31 ↔
+    2886729728 ≤ a * 16777216 + b * 65536 + c * 256 + d ∧
+    a * 16777216 + b * 65536 + c * 256 + d ≤ 2887778303</code></pre>
+
+<p><code>omega</code> is a decision procedure: for any goal made of additions, multiplications by constants and comparisons, it either proves the goal or reports that it cannot. Here it proves both directions of the <code>↔</code> using the four bounds, so Lean accepts the theorem and prints nothing. (Lean prints the same four hypotheses above this goal, and the right-hand side as one long line; both are trimmed here to fit.)</p>
+
+<p>With the typo, the goal says <code>b ≤ 32</code> instead, and the error above is <code>omega</code> reporting the region where a counterexample may lie.</p>
+
+<p>Decoded: <code>e</code>, <code>f</code> and <code>g</code> stand for <code>b</code>, <code>c</code> and <code>d</code>, and <code>a</code> is missing because the guard's side of the claim has already fixed it at 172. The last line says <code>b × 65536 + c × 256 + d</code> is at least 2,097,152, which is 32 × 65536: the address is at or past <code>172.32.0.0</code>, outside the range. Together with <code>b ≤ 32</code>, that leaves <code>b = 32</code> and any <code>c</code> and <code>d</code>, so the counterexample region is <code>172.32.x.x</code>, the same place the solver pointed.</p>
 
 <p>Rung 6 gives the strongest guarantee here, and it covers the least ground. The theorem is about the Lean definition <code>guard172</code>, not the Python function, and the parsing bug that let <code>0177.0.0.1</code> through is not in it at all. To prove the whole guard, you would have to describe in Lean exactly how <code>inet_aton</code> reads a string, and how Python's <code>int</code> does, and then prove the two agree. Projects that do this exist. seL4, an operating-system kernel proved correct in Isabelle, a proof assistant similar to Lean, needed about 200,000 lines of proof for about 8,700 lines of C.</p>
 
@@ -767,6 +879,24 @@ TestFixedFetch = FixedFetchMachine.TestCase</code></pre>
 
 <p>Deciding which direction the property runs in is a design choice, and no tool makes it for you. A security guard usually wants the one-directional form: never let a bad host through, and tolerate refusing a few odd good ones.</p>
 
+<h3>Dry run: the fixed guard on the hosts that broke the old one</h3>
+
+<div class="tablebox">
+<table>
+<thead><tr><th>Host</th><th><code>inet_aton</code> reads</th><th>Plain spelling?</th><th>Fixed guard</th><th>OS (oracle)</th></tr></thead>
+<tbody>
+<tr><td><code>10.0</code></td><td><code>10.0.0.0</code></td><td>no</td><td>refuses</td><td>blocked</td></tr>
+<tr><td><code>0177.0.0.1</code></td><td><code>127.0.0.1</code></td><td>no</td><td>refuses</td><td>blocked</td></tr>
+<tr><td><code>010.0.0.1</code></td><td><code>8.0.0.1</code></td><td>no</td><td>refuses</td><td>allowed</td></tr>
+<tr><td><code>10.0.0.5</code></td><td><code>10.0.0.5</code></td><td>yes</td><td>refuses: in <code>10.0.0.0/8</code></td><td>blocked</td></tr>
+<tr><td><code>8.8.8.8</code></td><td><code>8.8.8.8</code></td><td>yes</td><td>allows</td><td>allowed</td></tr>
+<tr><td><code>example.com</code></td><td>not an address</td><td>n/a</td><td>allows: a name, checked after lookup</td><td>allowed</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>The <code>010.0.0.1</code> row is the one-way property at work: the guard refuses a host the OS would read as public, which is safe, so the property allows it. Every row where the OS would reach a blocked address is a row the guard refuses. For the double lookup, the fixed <code>fetch</code> stores the one answer it gets and connects to that, so step 2b in the rung 4 replay would connect to <code>93.184.216.34</code>, the address it checked.</p>
+
 <h2 id="choosing-a-rung">Choosing a rung</h2>
 
 <div class="tablebox">
@@ -822,10 +952,12 @@ sh /tmp/elan-init.sh -y --no-modify-path \
 <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
 <tbody>
 <tr><td>Counterexample</td><td>An input that makes a property false. Finding one proves a bug exists, in the code or in the property.</td></tr>
+<tr><td>Decision procedure</td><td>An algorithm that always finishes with a yes or no for every question in its class, such as Lean's <code>omega</code> for whole-number arithmetic.</td></tr>
 <tr><td>DNS rebinding</td><td>Making a hostname answer with one address when it is checked and another when it is used.</td></tr>
 <tr><td>Example test</td><td>A test that runs the code on one input the author chose and checks the answer.</td></tr>
 <tr><td>Exhaustive enumeration</td><td>Trying every input in a finite set. A pass is a proof over that set.</td></tr>
 <tr><td>Formal verification</td><td>Checking code against a specification by reasoning about every input, rather than by running it on some.</td></tr>
+<tr><td>Goal (Lean)</td><td>The statement still left to prove at a point in a proof. Each tactic changes it, and the proof ends when no goal remains.</td></tr>
 <tr><td>Guard</td><td>A function that decides whether a request may go ahead, here whether a host is safe to connect to.</td></tr>
 <tr><td>Hypothesis (Lean)</td><td>An assumption a proof may use, such as <code>a &lt; 256</code>.</td></tr>
 <tr><td>Hypothesis (Python)</td><td>A library for property-based testing in Python.</td></tr>
