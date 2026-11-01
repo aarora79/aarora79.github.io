@@ -19,6 +19,9 @@ explainers/
   agentic-ai-bookmarks-2026/index.html          agentic AI bookmarks, 2026
   on-ai/index.html                              On AI: three ideas informing my thinking
   on-ai/on-ai-infographic.png                   PNG of the same infographic
+  formal-verification-ladder/index.html         six ways to check code, unit tests to proofs
+  formal-verification-ladder/poster/            two page poster: HTML, PNGs and PDF
+  formal-verification-ladder/demo/              the runnable code the explainer quotes
 ```
 
 The homepage `WRITING` section shows five selected posts and links to `aws-blogs/` for the full list. Adding a post means editing both: a `<li>` on the full listing (under its year), and optionally one on the homepage.

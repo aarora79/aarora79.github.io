@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>From unit tests to proofs: six ways to check that code does what it claims</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<style>
+:root {
+  --measure: 64ch;
+  --sans: Inter, Roboto, -apple-system, "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", "Roboto Mono", ui-monospace, Menlo, Consolas, monospace;
+  --bg: #fffdf5; --panel: #ffffff; --ink: #1d2b2a; --ink-2: #2b3a39;
+  --ink-3: #52615f; --rule: #e4e0d0; --accent: #0f766e; --accent-2: #f5c518;
+  --teal-soft: #e0f2ef; --yellow-soft: #fff6cc; --ink-on-yellow: #1d2b2a;
+  --code-bg: #f3f1e8; --bad: #b42318; --good: #0f766e;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10191a; --panel: #172224; --ink: #e8efee; --ink-2: #d3dedd;
+    --ink-3: #9fb2b0; --rule: #2a3a3b; --accent: #4fd1c1; --accent-2: #f5c518;
+    --teal-soft: #173a38; --yellow-soft: #3a3312; --ink-on-yellow: #1d2b2a;
+    --code-bg: #1f2c2e; --bad: #f28b82; --good: #4fd1c1;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10191a; --panel: #172224; --ink: #e8efee; --ink-2: #d3dedd;
+  --ink-3: #9fb2b0; --rule: #2a3a3b; --accent: #4fd1c1; --accent-2: #f5c518;
+  --teal-soft: #173a38; --yellow-soft: #3a3312; --ink-on-yellow: #1d2b2a;
+  --code-bg: #1f2c2e; --bad: #f28b82; --good: #4fd1c1;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 18px/1.7 var(--sans); }
+.wrap { display: grid; grid-template-columns: 1fr min(var(--measure), 100%) 1fr; padding: 48px 16px 96px; }
+.wrap > * { grid-column: 2; }
+header { border-left: 6px solid var(--accent-2); padding: 4px 0 4px 18px; margin-bottom: 28px; }
+h1 { font-size: clamp(32px, 4.6vw, 42px); line-height: 1.16; margin: 0 0 16px; font-weight: 700; color: var(--accent); }
+h2 { font-size: 28px; line-height: 1.25; margin: 56px 0 12px; font-weight: 700; color: var(--accent);
+  padding-bottom: 6px; border-bottom: 2px solid var(--accent-2); }
+h3 { font-size: 21px; line-height: 1.3; margin: 32px 0 8px; font-weight: 600; }
+p, li { color: var(--ink-2); }
+.standfirst { font-size: 21px; line-height: 1.55; color: var(--ink); margin: 0 0 12px; }
+.byline { font-size: 14.5px; color: var(--ink-3); margin: 0 0 32px; }
+a { color: var(--accent); overflow-wrap: anywhere; }
+code { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+pre { position: relative; background: var(--code-bg); border: 1px solid var(--rule); border-radius: 8px;
+  padding: 16px 18px; overflow-x: auto; font: 14.5px/1.65 var(--mono); margin: 20px 0; }
+pre code { background: none; padding: 0; font-size: inherit; }
+code, pre, svg .m { font-variant-ligatures: none; }
+.copy { position: absolute; top: 8px; right: 8px; font: 600 12.5px var(--sans); color: var(--ink-3);
+  background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+.copy:hover { color: var(--accent); border-color: var(--accent); }
+.copy svg { width: 13px; height: 13px; vertical-align: -2px; margin-right: 4px; fill: none; stroke: currentColor; stroke-width: 2; }
+.tablebox { overflow-x: auto; margin: 20px 0; }
+table { border-collapse: collapse; font-size: 16px; font-variant-numeric: tabular-nums; width: 100%; }
+th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--rule); }
+th { color: var(--ink); font-weight: 600; background: var(--teal-soft); }
+td { color: var(--ink-2); }
+figure { margin: 28px 0; background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 18px; }
+figure svg { width: 100%; height: auto; display: block; }
+figure.infographic { padding: 0; background: none; border: none; }
+figure.infographic svg { border: 1px solid var(--rule); border-radius: 10px; }
+.posterpair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.posterpair img { width: 100%; height: auto; display: block; border: 1px solid var(--rule); border-radius: 6px; }
+figcaption { font-size: 14.5px; color: var(--ink-3); margin-top: 8px; max-width: var(--measure); }
+.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 24px 0 8px; }
+.tile { background: var(--panel); border: 1px solid var(--rule); border-top: 4px solid var(--accent); border-radius: 8px; padding: 12px 14px; }
+.tile:last-child { border-top-color: var(--accent-2); }
+.tile b { display: block; font-size: 26px; line-height: 1.2; color: var(--ink); }
+.tile span { display: block; font-size: 14.5px; line-height: 1.5; color: var(--ink-3); }
+.note { font-size: 14.5px; color: var(--ink-3); }
+aside.callout { background: var(--yellow-soft); border-left: 4px solid var(--accent-2); border-radius: 0 8px 8px 0; padding: 4px 20px; margin: 24px 0; }
+aside.callout h4 { font-size: 17px; margin: 14px 0 4px; color: var(--ink); }
+nav.toc ol { padding-left: 22px; margin: 0; }
+nav.toc li { margin: 2px 0; }
+svg .box { fill: var(--bg); stroke: var(--rule); stroke-width: 1.5; }
+svg .hi { fill: var(--teal-soft); stroke: var(--accent); stroke-width: 2; }
+svg .warn { fill: var(--yellow-soft); stroke: var(--accent-2); stroke-width: 2; }
+svg .t { fill: var(--ink); font: 600 15px var(--sans); }
+svg .s { fill: var(--ink-3); font: 13px var(--sans); }
+svg .m { fill: var(--ink-2); font: 13px var(--mono); }
+svg .bad { fill: var(--bad); font: 600 13px var(--sans); }
+svg .good { fill: var(--good); font: 600 13px var(--sans); }
+svg .ln { stroke: var(--ink-3); stroke-width: 1.5; fill: none; }
+svg .ar { fill: var(--ink-3); }
+@media (max-width: 600px) { body { font-size: 17px; } .wrap { padding: 28px 16px 64px; } }
+@media print {
+  body { font-size: 11pt; background: #fff; color: #000; }
+  figure, pre, table, .tile { break-inside: avoid; }
+  .copy { display: none; }
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+<header>
+<h1>From unit tests to proofs: six ways to check that code does what it claims</h1>
+<p class="standfirst">Formal verification is a family of techniques for checking code against a stated rule, from generating thousands of test inputs up to a mathematical proof that covers every input. This page explains the basic ideas from scratch and then climbs six rungs, each a stronger way to check code, on one small function, so you can see what each rung finds and what it costs.</p>
+<p class="byline">Written 1 November 2026. The page assumes no background in testing theory or proofs. Every sample on this page ran on that date: Python 3.14 with Hypothesis 6.170.2 and Z3, and Lean 4.35.0.</p>
+</header>
+
+<div class="strip">
+  <div class="tile"><b>3 of 3</b><span>example tests pass on a guard with two bugs in it</span></div>
+  <div class="tile"><b>10 of 20</b><span>runs in which a plain random generator found the parsing bug</span></div>
+  <div class="tile"><b>65,536</b><span>inputs that a loop checks to prove the range check over every address</span></div>
+  <div class="tile"><b>2<sup>32</sup></b><span>addresses a solver and a proof cover without trying one of them</span></div>
+</div>
+
+<figure class="poster">
+<div class="posterpair">
+<a href="poster/"><img src="poster/formal-verification-ladder-poster-front-thumb.jpg" width="700" height="990" alt="Poster front: the agent problem, the guard and its bypasses, the six rungs and which bug each one caught"></a>
+<a href="poster/"><img src="poster/formal-verification-ladder-poster-back-thumb.jpg" width="700" height="990" alt="Poster back: the chart of inputs each rung covered, and the code and output for rungs 2, 4, 5 and 6"></a>
+</div>
+<figcaption>The whole ladder as a two-page poster: the story on the front, the evidence on the back. Open <a href="poster/">the poster</a>, or download <a href="poster/formal-verification-ladder-poster.pdf">the PDF</a> (print duplex, long-edge binding, no scaling) or the <a href="poster/formal-verification-ladder-poster-front.png">front</a> and <a href="poster/formal-verification-ladder-poster-back.png">back</a> as 300 DPI PNGs.</figcaption>
+</figure>
+
+<nav class="toc">
+<h3>Contents</h3>
+<ol>
+<li><a href="#why-this-matters-when-agents-write-the-code">Why this matters when agents write the code</a></li>
+<li><a href="#the-example-a-guard-against-private-addresses">The example: a guard against private addresses</a></li>
+<li><a href="#six-ideas-the-rest-of-the-page-uses">Six ideas the rest of the page uses</a></li>
+<li><a href="#the-ladder">The ladder</a></li>
+<li><a href="#rung-1-example-tests">Rung 1: example tests</a></li>
+<li><a href="#rung-2-property-based-testing">Rung 2: property-based testing</a></li>
+<li><a href="#rung-3-exhaustive-enumeration">Rung 3: exhaustive enumeration</a></li>
+<li><a href="#rung-4-state-machine-testing">Rung 4: state-machine testing</a></li>
+<li><a href="#rung-5-a-solver">Rung 5: a solver</a></li>
+<li><a href="#rung-6-a-machine-checked-proof">Rung 6: a machine-checked proof</a></li>
+<li><a href="#fixing-the-guard-and-checking-the-fix">Fixing the guard, and checking the fix</a></li>
+<li><a href="#choosing-a-rung">Choosing a rung</a></li>
+<li><a href="#what-none-of-this-tells-you">What none of this tells you</a></li>
+<li><a href="#run-it-yourself">Run it yourself</a></li>
+<li><a href="#glossary">Glossary</a></li>
+<li><a href="#sources">Sources</a></li>
+</ol>
+</nav>
+
+<h2 id="why-this-matters-when-agents-write-the-code">Why this matters when agents write the code</h2>
+
+<p>A coding agent can write a few hundred lines of working code in a minute, along with unit tests for it. Nobody reads code that fast, so in practice you trust the tests. That breaks down when the agent wrote both. If it misunderstood what the code should do, its tests check the same misunderstanding, and everything passes.</p>
+
+<p>The example on this page shows that happening. It is a 32-line function with three unit tests that any reviewer would accept. The tests pass, and the function still lets a request through to the machine it runs on and blocks an address it should allow.</p>
+
+<p>The techniques on this page let you trust something you can read. Instead of reading the code, you read a <strong>specification</strong>: a short statement of what the code must do. "The guard must refuse every address the operating system would read as private" is one sentence, and you can check that sentence is right in a few seconds. A tool then checks the code against it. The tool behaves the same whether a person or a model wrote the code, so you no longer have to trust the author, only the specification and the tool.</p>
+
+<p>Agents also make the expensive techniques cheaper. Writing a solver query or a Lean proof used to need a specialist. An agent can draft one in minutes, and the checker rejects a wrong draft, so a bad one costs you a retry and nothing worse. Google DeepMind's AlphaProof, which reached silver-medal standard on the 2024 International Mathematical Olympiad, worked this way: a model wrote proofs in Lean, and Lean checked them.</p>
+
+<p>An agent asked to make a check pass can also weaken the check, so you still review the specification yourself. The last section covers what to look for. The tool does the rest of the reading.</p>
+
+<h2 id="the-example-a-guard-against-private-addresses">The example: a guard against private addresses</h2>
+
+<p>Many services fetch a URL that a user supplies: a webhook, a link preview, an image import. If the service fetches whatever it receives, a user can point it at <code>http://127.0.0.1/admin</code> or at a database on the internal network, and the service makes that request from inside, where the firewall trusts it. The name for this attack is <strong>server-side request forgery</strong>, or SSRF.</p>
+
+<p>The usual defense is a <strong>guard</strong>: a function that looks at the host in the URL and refuses it if it points at a private address. The ranges below cover loopback (the machine itself) and the three private networks set aside in RFC 1918:</p>
+
+<div class="tablebox">
+<table>
+<thead><tr><th>Range</th><th>Covers</th><th>Example</th></tr></thead>
+<tbody>
+<tr><td><code>127.0.0.0/8</code></td><td>Loopback: the machine itself</td><td><code>127.0.0.1</code></td></tr>
+<tr><td><code>10.0.0.0/8</code></td><td>Private network</td><td><code>10.0.0.5</code></td></tr>
+<tr><td><code>172.16.0.0/12</code></td><td>Private network, <code>172.16.0.0</code> to <code>172.31.255.255</code></td><td><code>172.20.1.1</code></td></tr>
+<tr><td><code>192.168.0.0/16</code></td><td>Private network</td><td><code>192.168.1.20</code></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>This guard is the kind someone, or some agent, might write. It splits the host on dots, reads four numbers, and checks them against the table:</p>
+
+<pre><code class="language-python">"""A small SSRF guard against private addresses."""
+
+
+def parse_ipv4(
+    host: str,
+) -&gt; list[int] | None:
+    """Read a dotted address like "10.0.0.5", or return None."""
+    parts = host.split(".")
+    if len(parts) != 4:
+        return None
+    try:
+        numbers = [int(part) for part in parts]
+    except ValueError:
+        return None
+    if any(n &lt; 0 or n &gt; 255 for n in numbers):
+        return None
+    return numbers
+
+
+def is_blocked(
+    host: str,
+) -&gt; bool:
+    """True if the guard should refuse to connect to this host."""
+    numbers = parse_ipv4(host)
+    if numbers is None:
+        return False  # not an IP address, so treat it as a hostname
+    a, b = numbers[0], numbers[1]
+    if a == 127 or a == 10:
+        return True
+    if a == 172 and 16 &lt;= b &lt;= 32:
+        return True
+    return a == 192 and b == 168</code></pre>
+
+<p>It looks right, and it has two bugs. The first is a typo: the <code>172</code> range should stop at <code>31</code>, and the code says <code>32</code>, so it blocks the public network <code>172.32.0.0</code>. The second takes more explaining, and it is the one that lets the attack through.</p>
+
+<p>The guard reads the host one way, and the operating system reads it another. When the service connects, the C library parses the host with a function called <code>inet_aton</code>. Its manual page says each part can be written in decimal, in octal with a leading <code>0</code>, or in hex with a leading <code>0x</code>, and that an address can have one, two, three or four parts. So the OS reads all of these as <code>127.0.0.1</code>:</p>
+
+<pre><code class="language-text">host            guard blocks?   inet_aton reads
+127.0.0.1       True            127.0.0.1
+0177.0.0.1      False           127.0.0.1
+0x7f.0.0.1      False           127.0.0.1
+127.1           False           127.0.0.1
+2130706433      False           127.0.0.1</code></pre>
+
+<p>The guard reads <code>0177</code> as the decimal number 177 and lets it through. It gives up on <code>0x7f</code>, <code>127.1</code> and <code>2130706433</code> because they are not four decimal numbers, and treats them as hostnames. The OS connects to loopback in every case. Attackers have used these spellings for years, and the OWASP SSRF guidance lists hex, octal and dword forms as standard bypasses.</p>
+
+<h2 id="six-ideas-the-rest-of-the-page-uses">Six ideas the rest of the page uses</h2>
+
+<p>A <strong>specification</strong> says what the code must do, independent of how it does it. For the guard: refuse a host exactly when the OS would read it as an address in one of the four ranges.</p>
+
+<p>A <strong>property</strong> is a specification written as code that returns true or false for any input. Here: <code>is_blocked(host) == os_reaches_blocked(host)</code>. A property names no particular input, and that is what separates it from an example test.</p>
+
+<p>A <strong>counterexample</strong> is an input that makes the property false. <code>"0177.0.0.1"</code> is one. Finding a counterexample proves there is a bug, either in the code or in the property. Failing to find one proves nothing unless you tried every input.</p>
+
+<p>An <strong>oracle</strong> is whatever you trust to give the right answer. Sometimes it is a short, plain rewrite of the rule, called a <strong>reference model</strong>. Here the best oracle already exists: <code>inet_aton</code> itself, because it decides where the connection goes. Wrapped in a few lines of Python, it becomes the function the property compares against:</p>
+
+<pre><code class="language-python">"""What the operating system would actually connect to."""
+
+import ipaddress
+import socket
+
+BLOCKED = [
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+]
+
+
+def os_reaches_blocked(
+    host: str,
+) -&gt; bool:
+    """True if the OS would read host as a blocked address."""
+    try:
+        packed = socket.inet_aton(host)  # the C library's own parser
+    except OSError:
+        return False  # the OS reads it as a hostname, not an address
+    address = ipaddress.IPv4Address(packed)
+    return any(address in network for network in BLOCKED)</code></pre>
+
+<p>The <strong>input space</strong> is the set of every possible input. For the guard it is every string, which is infinite, so a test can only sample it. When the space is small enough, you can try all of it, and then a pass becomes a proof.</p>
+
+<p><strong>Shrinking</strong> is what a testing tool does after it finds a failing input: it tries smaller versions until none of them fail, and reports the smallest. A random failure might be <code>"0xff.0254.012"</code>. The shrunk one is short enough to understand at once.</p>
+
+<h2 id="the-ladder">The ladder</h2>
+
+<p>The six techniques form a ladder. Each rung up checks more inputs, or all of them, and asks more of you in return. The right side of the diagram shows what each rung found in the guard.</p>
+
+<figure>
+<svg viewBox="0 0 700 430" role="img" aria-label="Six rungs from example tests to proof, each labelled with what it found in the guard">
+  <defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="ar"/></marker></defs>
+  <rect x="2" y="4" width="376" height="56" rx="6" class="hi"/>
+  <text x="16" y="28" class="t">6. Machine-checked proof (Lean)</text>
+  <text x="16" y="48" class="s">a checked argument for every input</text>
+  <text x="404" y="28" class="t">proved the fixed range check</text>
+  <text x="404" y="48" class="s">and rejected the typo</text>
+  <rect x="2" y="74" width="376" height="56" rx="6" class="hi"/>
+  <text x="16" y="98" class="t">5. Solver (Z3)</text>
+  <text x="16" y="118" class="s">reasons about every input at once</text>
+  <text x="404" y="98" class="t">found 172.32.255.255</text>
+  <text x="404" y="118" class="s">then proved the fix for 2^32</text>
+  <rect x="2" y="144" width="376" height="56" rx="6" class="box"/>
+  <text x="16" y="168" class="t">4. State-machine testing</text>
+  <text x="16" y="188" class="s">random sequences of steps</text>
+  <text x="404" y="168" class="t">found the DNS switch</text>
+  <text x="404" y="188" class="s">checked one address, used another</text>
+  <rect x="2" y="214" width="376" height="56" rx="6" class="box"/>
+  <text x="16" y="238" class="t">3. Exhaustive enumeration</text>
+  <text x="16" y="258" class="s">every input in a small, finite set</text>
+  <text x="404" y="238" class="t">found 172.32.0.1</text>
+  <text x="404" y="258" class="s">and 6 spellings, in 66,304 inputs</text>
+  <rect x="2" y="284" width="376" height="56" rx="6" class="box"/>
+  <text x="16" y="308" class="t">2. Property-based testing</text>
+  <text x="16" y="328" class="s">generated inputs against one rule</text>
+  <text x="404" y="308" class="t">found "10.0"</text>
+  <text x="404" y="328" class="s">a two-part private address</text>
+  <rect x="2" y="354" width="376" height="56" rx="6" class="warn"/>
+  <text x="16" y="378" class="t">1. Example tests</text>
+  <text x="16" y="398" class="s">the inputs the author thought of</text>
+  <text x="404" y="378" class="t">found nothing</text>
+  <text x="404" y="398" class="s">3 of 3 passed</text>
+  <path d="M392 416 L392 12" class="ln" marker-end="url(#a1)"/>
+</svg>
+<figcaption>Rungs 2 to 4 still run the real code on real inputs, so they are testing. Rungs 5 and 6 reason about the code without running it on any input, which is what people usually mean by formal verification.</figcaption>
+</figure>
+
+<h2 id="rung-1-example-tests">Rung 1: example tests</h2>
+
+<p>An <strong>example test</strong> picks an input, runs the code, and checks the answer. These three cover loopback, two private ranges and one public address:</p>
+
+<pre><code class="language-python">from guard import is_blocked
+
+
+def test_blocks_loopback() -&gt; None:
+    assert is_blocked("127.0.0.1")
+
+
+def test_blocks_private() -&gt; None:
+    assert is_blocked("10.0.0.5")
+    assert is_blocked("192.168.1.20")
+
+
+def test_allows_public() -&gt; None:
+    assert not is_blocked("8.8.8.8")</code></pre>
+
+<pre><code class="language-text">3 passed in 0.28s</code></pre>
+
+<p>All three pass, because the author wrote every input the way they thought of it. Nobody writes <code>assert is_blocked("0177.0.0.1")</code> without already knowing that octal is a problem, and an agent that does not know about octal writes the same three tests. Example tests are still worth having: they are quick to read and they document intent. They cannot find the case nobody imagined.</p>
+
+<h2 id="rung-2-property-based-testing">Rung 2: property-based testing</h2>
+
+<p>A <strong>property-based test</strong> states the property and lets a library generate the inputs. Hypothesis is the standard Python library for this. You describe the shape of the inputs with a <strong>strategy</strong>, a recipe for generating one kind of value, and Hypothesis runs the test on 100 fresh inputs by default.</p>
+
+<figure>
+<svg viewBox="0 0 700 250" role="img" aria-label="Generate an input, run both the guard and the oracle, compare, and shrink on a mismatch">
+  <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="ar"/></marker></defs>
+  <rect x="2" y="96" width="130" height="58" rx="6" class="box"/>
+  <text x="67" y="120" class="t" text-anchor="middle">generate</text>
+  <text x="67" y="141" class="m" text-anchor="middle">"0x7f.012"</text>
+  <path d="M132 112 L198 62" class="ln" marker-end="url(#a2)"/>
+  <path d="M132 138 L198 188" class="ln" marker-end="url(#a2)"/>
+  <rect x="200" y="30" width="190" height="56" rx="6" class="box"/>
+  <text x="295" y="54" class="t" text-anchor="middle">guard</text>
+  <text x="295" y="74" class="m" text-anchor="middle">is_blocked: False</text>
+  <rect x="200" y="164" width="190" height="56" rx="6" class="box"/>
+  <text x="295" y="188" class="t" text-anchor="middle">oracle</text>
+  <text x="295" y="208" class="m" text-anchor="middle">inet_aton: True</text>
+  <path d="M390 58 L438 108" class="ln" marker-end="url(#a2)"/>
+  <path d="M390 192 L438 142" class="ln" marker-end="url(#a2)"/>
+  <rect x="440" y="96" width="110" height="58" rx="6" class="warn"/>
+  <text x="495" y="120" class="t" text-anchor="middle">compare</text>
+  <text x="495" y="141" class="bad" text-anchor="middle">disagree</text>
+  <path d="M550 125 L578 125" class="ln" marker-end="url(#a2)"/>
+  <rect x="580" y="96" width="116" height="58" rx="6" class="hi"/>
+  <text x="638" y="120" class="t" text-anchor="middle">shrink</text>
+  <text x="638" y="141" class="m" text-anchor="middle">to "10.0"</text>
+</svg>
+<figcaption>One trip round the loop. When the guard and the oracle agree, Hypothesis draws the next input. When they disagree, it stops generating and starts shrinking.</figcaption>
+</figure>
+
+<p>The strategy below builds hosts from one to four parts, writing each part in decimal, octal or hex. The property says the guard and the OS agree:</p>
+
+<pre><code class="language-python">from hypothesis import (
+    given,
+    strategies as st,
+)
+
+from guard import is_blocked
+from oracle import os_reaches_blocked
+
+
+def _spell(
+    number: int,
+    style: str,
+) -&gt; str:
+    """Write a number the way inet_aton accepts it."""
+    if style == "octal":
+        return "0" + format(number, "o")
+    if style == "hex":
+        return "0x" + format(number, "x")
+    return str(number)
+
+
+# Mix the numbers the guard cares about in with random ones.
+NUMBERS = st.one_of(
+    st.sampled_from([0, 10, 127, 168, 172, 192, 255]),
+    st.integers(min_value=0, max_value=255),
+)
+
+
+@st.composite
+def hosts(draw: st.DrawFn) -&gt; str:
+    """Hosts with 1 to 4 parts, each in decimal, octal or hex."""
+    count = draw(st.integers(min_value=1, max_value=4))
+    parts = []
+    for _ in range(count):
+        number = draw(NUMBERS)
+        style = draw(st.sampled_from(["decimal", "octal", "hex"]))
+        parts.append(_spell(number, style))
+    return ".".join(parts)
+
+
+@given(host=hosts())
+def test_guard_agrees_with_the_os(
+    host: str,
+) -&gt; None:
+    assert is_blocked(host) == os_reaches_blocked(host)</code></pre>
+
+<pre><code class="language-text">E           host='10.0',
+FAILED test_rung2_property.py::test_guard_agrees_with_the_os</code></pre>
+
+<p>Hypothesis found a disagreement and shrank it to <code>"10.0"</code>. The OS reads a two-part address as <code>10.0.0.0</code>, which is private. The guard sees two parts instead of four and waves it through as a hostname.</p>
+
+<aside class="callout">
+<h4>The generator decides what the test can find</h4>
+<p>The first version of this strategy drew every number uniformly from 0 to 255. Across 20 runs it found the bug in 10. Private addresses start with 10, 127, 172 or 192, so a uniform draw rarely lands on one. Mixing those numbers in with the random ones raised it to 20 runs out of 20. A passing property test means only that the generator did not reach the bug, so check that it can: break the code on purpose and confirm the test fails.</p>
+</aside>
+
+<h2 id="rung-3-exhaustive-enumeration">Rung 3: exhaustive enumeration</h2>
+
+<p>The input space of strings is infinite, but parts of the problem are not. Every address has four numbers from 0 to 255, and in this guard only the first two decide the answer. That is 256 × 256 = 65,536 cases, and a loop tries them all in about a quarter of a second. When a test tries every input in a set, a pass is a proof over that set.</p>
+
+<p>The second test applies the same idea to spelling: it writes each first number from 0 to 255 in decimal, octal and hex, which is 768 hosts.</p>
+
+<pre><code class="language-python">from guard import is_blocked
+from oracle import os_reaches_blocked
+
+
+def test_every_first_two_octets() -&gt; None:
+    """Only the first two numbers decide the answer: try all 65,536."""
+    wrong = []
+    for a in range(256):
+        for b in range(256):
+            host = f"{a}.{b}.0.1"
+            if is_blocked(host) != os_reaches_blocked(host):
+                wrong.append(host)
+    assert wrong == [], "wrong:\n" + "\n".join(wrong)
+
+
+def test_every_spelling_of_the_first_octet() -&gt; None:
+    """Each number 0-255 in decimal, octal and hex: 768 hosts."""
+    wrong = []
+    for a in range(256):
+        for first in (str(a), "0" + format(a, "o"), hex(a)):
+            host = f"{first}.0.0.1"
+            if is_blocked(host) != os_reaches_blocked(host):
+                wrong.append(host)
+    assert wrong == [], "wrong:\n" + "\n".join(wrong)</code></pre>
+
+<pre><code class="language-text">E       AssertionError: wrong:
+E         172.32.0.1
+
+E       AssertionError: wrong:
+E         010.0.0.1
+E         012.0.0.1
+E         0xa.0.0.1
+E         0127.0.0.1
+E         0177.0.0.1
+E         0x7f.0.0.1</code></pre>
+
+<p>The first test finds the typo and nothing else. Out of 65,536 pairs, only <code>172.32</code> gets the wrong answer, and once you fix the typo the loop proves the range check right for every address.</p>
+
+<p>The second test finds six spellings the guard gets wrong, in both directions. Four get through: <code>012</code> is octal for 10, <code>0xa</code> is hex for 10, and <code>0177</code> and <code>0x7f</code> are both 127. Two get blocked by mistake: the guard reads <code>010</code> as 10 and <code>0127</code> as 127, while the OS reads them as octal 8 and 87, both public.</p>
+
+<p>The proof covers only the set you chose. The first test needed the insight that only two octets matter, and the second covers only one part of the address. Neither says anything about a spelling like <code>127.1</code>. Picking the set is where the judgment goes.</p>
+
+<h2 id="rung-4-state-machine-testing">Rung 4: state-machine testing</h2>
+
+<p>Some bugs are not in any single call. They show up only after a particular sequence of events. A guard that checks a hostname has one: it looks up the name to get an address, checks the address, and then the HTTP client looks the name up again to connect. If the DNS answer changes between the two lookups, the guard approves one address and the client connects to another. The attack is <strong>DNS rebinding</strong>, and the bug pattern behind it has the name <strong>time-of-check to time-of-use</strong>.</p>
+
+<figure>
+<svg viewBox="0 0 700 200" role="img" aria-label="Timeline: lookup returns public, check passes, DNS changes, second lookup returns loopback, connect">
+  <defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="ar"/></marker></defs>
+  <path d="M2 100 L694 100" class="ln" marker-end="url(#a3)"/>
+  <text x="694" y="124" class="s" text-anchor="end">time</text>
+  <rect x="2" y="20" width="146" height="56" rx="6" class="box"/>
+  <text x="75" y="44" class="t" text-anchor="middle">lookup 1</text>
+  <text x="75" y="64" class="m" text-anchor="middle">93.184.216.34</text>
+  <rect x="162" y="20" width="136" height="56" rx="6" class="box"/>
+  <text x="230" y="44" class="t" text-anchor="middle">check</text>
+  <text x="230" y="64" class="good" text-anchor="middle">public: allow</text>
+  <rect x="312" y="124" width="190" height="56" rx="6" class="warn"/>
+  <text x="407" y="148" class="t" text-anchor="middle">DNS answer changes</text>
+  <text x="407" y="168" class="m" text-anchor="middle">now 127.0.0.1</text>
+  <rect x="516" y="20" width="180" height="56" rx="6" class="warn"/>
+  <text x="606" y="44" class="t" text-anchor="middle">lookup 2, connect</text>
+  <text x="606" y="64" class="bad" text-anchor="middle">127.0.0.1</text>
+</svg>
+<figcaption>Each step looks correct on its own. The bug is in the gap between the check and the connection, and only a test that varies the order of events can land in it.</figcaption>
+</figure>
+
+<p>A <strong>state machine</strong> test models the system as some state plus a set of actions that change it, which Hypothesis calls <strong>rules</strong>. You also write <strong>invariants</strong>: properties of the state that must hold after every step. Hypothesis runs random sequences of rules, checks the invariants after each one, and shrinks a failing sequence to the shortest one that still fails.</p>
+
+<p>Here the state is a fake DNS server and a list of addresses the client connected to. One rule queues a new DNS answer, another fetches a page, and the invariant says the client never connected to a blocked address:</p>
+
+<pre><code class="language-python">from hypothesis import strategies as st
+from hypothesis.stateful import (
+    RuleBasedStateMachine,
+    invariant,
+    rule,
+)
+
+from guard import is_blocked
+from oracle import os_reaches_blocked
+
+PUBLIC = "93.184.216.34"
+LOOPBACK = "127.0.0.1"
+
+
+class FakeDns:
+    """Hands out queued answers, then repeats the last one."""
+
+    def __init__(self) -&gt; None:
+        self.answers: list[str] = [PUBLIC]
+
+    def resolve(self, name: str) -&gt; str:
+        if len(self.answers) &gt; 1:
+            return self.answers.pop(0)
+        return self.answers[0]
+
+
+def fetch(
+    dns: FakeDns,
+    name: str,
+    connections: list[str],
+) -&gt; None:
+    """Check the address, then connect. It looks the name up twice."""
+    if is_blocked(dns.resolve(name)):
+        return
+    connections.append(dns.resolve(name))
+
+
+class FetchMachine(RuleBasedStateMachine):
+    fetch_function = staticmethod(fetch)
+
+    def __init__(self) -&gt; None:
+        super().__init__()
+        self.dns = FakeDns()
+        self.connections: list[str] = []
+
+    @rule(answer=st.sampled_from([PUBLIC, LOOPBACK]))
+    def dns_changes(self, answer: str) -&gt; None:
+        self.dns.answers.append(answer)
+
+    @rule()
+    def fetch_page(self) -&gt; None:
+        self.fetch_function(self.dns, "example.test", self.connections)
+
+    @invariant()
+    def never_connected_to_a_blocked_address(self) -&gt; None:
+        bad = [ip for ip in self.connections if os_reaches_blocked(ip)]
+        assert bad == [], f"connected to {bad}"
+
+
+TestFetch = FetchMachine.TestCase</code></pre>
+
+<pre><code class="language-text">E       AssertionError: connected to ['127.0.0.1']
+E       state = FetchMachine()
+E       state.never_connected_to_a_blocked_address()
+E       state.dns_changes(answer='127.0.0.1')
+E       state.never_connected_to_a_blocked_address()
+E       state.fetch_page()
+E       state.never_connected_to_a_blocked_address()
+E       state.teardown()</code></pre>
+
+<p>Hypothesis checks the invariant before and after every step, and the shortest failing sequence has two steps: the DNS answer changes, then the client fetches a page. The first lookup returns the public address, which passes the check, and the second returns loopback, which the client connects to. No input to <code>is_blocked</code> is wrong here, so rungs 1 to 3 cannot see this bug at all. The fix is in <code>fetch</code>: look the name up once, check that address, and connect to that same address.</p>
+
+<h2 id="rung-5-a-solver">Rung 5: a solver</h2>
+
+<p>Rung 3 proved the range check by trying 65,536 cases, and that worked only because someone spotted that two octets decide the answer. A <strong>solver</strong> needs no such insight. You describe the inputs and the condition you are looking for as logic, and the solver either finds values that make it true or proves none exist. An <strong>SMT solver</strong> (satisfiability modulo theories) is the kind that understands numbers and arithmetic, and Z3, from Microsoft Research, is one of the most common. Answering "is there any input where X happens" this way, without running the code, is the first rung most people would call formal verification.</p>
+
+<p>The script below writes the range check and the specification as formulas over four octets, then asks Z3 for any address where the two disagree:</p>
+
+<pre><code class="language-python">"""Ask Z3 if the range check can disagree with the spec."""
+
+from z3 import (
+    And,
+    Ints,
+    Solver,
+    sat,
+)
+
+a, b, c, d = Ints("a b c d")
+octets_valid = And([And(0 &lt;= x, x &lt;= 255) for x in (a, b, c, d)])
+address = a * 2**24 + b * 2**16 + c * 2**8 + d
+
+# The spec: 172.16.0.0 to 172.31.255.255, written as one number range.
+low = 172 * 2**24 + 16 * 2**16
+high = 172 * 2**24 + 31 * 2**16 + 255 * 2**8 + 255
+spec = And(low &lt;= address, address &lt;= high)
+
+guards = {
+    "as written (b &lt;= 32)": And(a == 172, 16 &lt;= b, b &lt;= 32),
+    "fixed (b &lt;= 31)": And(a == 172, 16 &lt;= b, b &lt;= 31),
+}
+for name, guard in guards.items():
+    solver = Solver()
+    solver.add(octets_valid, guard != spec)  # any disagreement
+    if solver.check() == sat:
+        m = solver.model()
+        found = ".".join(str(m.eval(x)) for x in (a, b, c, d))
+        print(f"{name}: counterexample {found}")
+    else:
+        print(f"{name}: no counterexample in all 2**32 addresses")</code></pre>
+
+<pre><code class="language-text">as written (b &lt;= 32): counterexample 172.32.255.255
+fixed (b &lt;= 31): no counterexample in all 2**32 addresses</code></pre>
+
+<p>For the code as written, Z3 returns <code>172.32.255.255</code>, inside the range the guard blocks and outside the one the specification names. For the fixed check it answers that the formula is <strong>unsatisfiable</strong>: no assignment of four octets makes them disagree. That covers all 4,294,967,296 addresses, and Z3 did not try any of them. It reasoned about the arithmetic instead.</p>
+
+<p>Solvers have limits. This one checked a formula that a person wrote to match the Python, not the Python itself, and the parsing bug never appears in the formula. Tools such as CrossHair run a solver over the Python functions themselves, and they handle small pure functions over numbers well. Strings, regular expressions and network calls are much harder for them.</p>
+
+<h2 id="rung-6-a-machine-checked-proof">Rung 6: a machine-checked proof</h2>
+
+<p>A <strong>proof assistant</strong> checks a proof step by step and refuses any step that does not follow from the ones before it. Lean is widely used by mathematicians, and it is the language AlphaProof wrote its proofs in. You write a <strong>theorem</strong>, a statement claimed to be true, and a proof of it. Lean's <strong>kernel</strong>, a small checker at its core, accepts the proof only if every step is valid. Once it does, the theorem holds for every input it covers. Nothing was sampled, and nothing depends on a solver finishing in time.</p>
+
+<p>This file states the range check and the specification in Lean and proves that they agree for every four octets below 256:</p>
+
+<pre><code class="language-lean">-- An IPv4 address as one number, from its four octets.
+def toNat (a b c d : Nat) : Nat :=
+  a * 16777216 + b * 65536 + c * 256 + d
+
+-- The spec: 172.16.0.0 through 172.31.255.255.
+def inPrivate172 (n : Nat) : Prop :=
+  2886729728 ≤ n ∧ n ≤ 2887778303
+
+-- The guard's check, fixed to stop at 31.
+def guard172 (a b : Nat) : Prop :=
+  a = 172 ∧ 16 ≤ b ∧ b ≤ 31
+
+theorem guard_matches_spec (a b c d : Nat)
+    (ha : a &lt; 256) (hb : b &lt; 256) (hc : c &lt; 256) (hd : d &lt; 256) :
+    guard172 a b ↔ inPrivate172 (toNat a b c d) := by
+  unfold guard172 inPrivate172 toNat
+  omega</code></pre>
+
+<p>Read the theorem as a sentence: for all numbers <code>a</code>, <code>b</code>, <code>c</code> and <code>d</code>, if each is below 256, the guard's check holds exactly when the address lies in the range. The names in parentheses, <code>ha</code> through <code>hd</code>, are <strong>hypotheses</strong>, the assumptions the proof may use. The two lines after <code>by</code> are the proof. Each is a <strong>tactic</strong>, a command that builds proof steps: <code>unfold</code> replaces each name with its definition, and <code>omega</code> settles any goal made of whole-number arithmetic and comparisons. Lean accepts this file with no output.</p>
+
+<p>Put the typo back, so the check reads <code>b ≤ 32</code>, and Lean refuses:</p>
+
+<pre><code class="language-text">error: omega could not prove the goal:
+a possible counterexample may satisfy the constraints
+  0 ≤ g ≤ 255
+  0 ≤ f ≤ 255
+  16 ≤ e ≤ 32
+  65536*e + 256*f + g ≥ 2097152
+where
+ e := ↑b
+ f := ↑c
+ g := ↑d</code></pre>
+
+<p>The message points at <code>b</code>, the second octet, near 32: the same <code>172.32</code> the solver found.</p>
+
+<p>Rung 6 gives the strongest guarantee here, and it covers the least ground. The theorem is about the Lean definition <code>guard172</code>, not the Python function, and the parsing bug that let <code>0177.0.0.1</code> through is not in it at all. To prove the whole guard, you would have to describe in Lean exactly how <code>inet_aton</code> reads a string, and how Python's <code>int</code> does, and then prove the two agree. Projects that do this exist. seL4, an operating-system kernel proved correct in Isabelle, a proof assistant similar to Lean, needed about 200,000 lines of proof for about 8,700 lines of C.</p>
+
+<h2 id="fixing-the-guard-and-checking-the-fix">Fixing the guard, and checking the fix</h2>
+
+<p>The ladder found three kinds of bug: the typo, the parsing mismatch and the double lookup. The fixed version deals with each one:</p>
+
+<pre><code class="language-python">"""The guard after the fixes the ladder pointed at."""
+
+import ipaddress
+import socket
+from typing import Protocol
+
+BLOCKED = [
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+]
+
+
+class Resolver(Protocol):
+    def resolve(self, name: str) -&gt; str: ...
+
+
+def is_blocked(
+    host: str,
+) -&gt; bool:
+    """True if the guard should refuse to connect to this host."""
+    try:
+        address = ipaddress.IPv4Address(socket.inet_aton(host))
+    except OSError:
+        return False  # not an address; the DNS check handles names
+    if host != str(address):
+        return True  # an unusual spelling: refuse rather than guess
+    return any(address in network for network in BLOCKED)
+
+
+def fetch(
+    dns: Resolver,
+    name: str,
+    connections: list[str],
+) -&gt; None:
+    """Look the name up once, check that address, connect to it."""
+    address = dns.resolve(name)
+    if is_blocked(address):
+        return
+    connections.append(address)</code></pre>
+
+<p>The guard now parses the host with <code>inet_aton</code>, the same function the OS uses, so the two cannot disagree about which address a string means. It refuses any spelling that is not plain four-part decimal, because nothing legitimate needs <code>0177.0.0.1</code>. It checks the ranges with Python's <code>ipaddress</code> module instead of hand-written comparisons, which removes the typo. And <code>fetch</code> looks the name up once and connects to the address it checked.</p>
+
+<p>The fix changes the specification, and the property has to change with it. The guard now refuses some hosts the OS would read as public, such as <code>010.0.0.1</code>, so the exact-agreement property from rung 2 would fail. That failure is not a bug: refusing an odd spelling is safe. The property you want is one-directional: whenever the OS would reach a blocked address, the guard refuses.</p>
+
+<pre><code class="language-python">from hypothesis import given
+
+import guard_fixed
+from oracle import os_reaches_blocked
+from test_rung2_property import hosts
+from test_rung4_state import FetchMachine
+
+
+@given(host=hosts())
+def test_never_lets_a_blocked_address_through(
+    host: str,
+) -&gt; None:
+    if os_reaches_blocked(host):
+        assert guard_fixed.is_blocked(host)
+
+
+def test_every_first_two_octets() -&gt; None:
+    for a in range(256):
+        for b in range(256):
+            host = f"{a}.{b}.0.1"
+            expected = os_reaches_blocked(host)
+            assert guard_fixed.is_blocked(host) == expected
+
+
+class FixedFetchMachine(FetchMachine):
+    fetch_function = staticmethod(guard_fixed.fetch)
+
+
+TestFixedFetch = FixedFetchMachine.TestCase</code></pre>
+
+<pre><code class="language-text">3 passed in 2.61s</code></pre>
+
+<p>Deciding which direction the property runs in is a design choice, and no tool makes it for you. A security guard usually wants the one-directional form: never let a bad host through, and tolerate refusing a few odd good ones.</p>
+
+<h2 id="choosing-a-rung">Choosing a rung</h2>
+
+<div class="tablebox">
+<table>
+<thead><tr><th>Rung</th><th>You write</th><th>A pass means</th><th>Use it when</th></tr></thead>
+<tbody>
+<tr><td>1. Example tests</td><td>Inputs and expected answers</td><td>Those inputs work</td><td>Always, to document intent</td></tr>
+<tr><td>2. Property-based</td><td>A rule and a generator</td><td>No counterexample in the inputs tried</td><td>The function is pure and its input space is large</td></tr>
+<tr><td>3. Exhaustive</td><td>A rule and a loop</td><td>Correct for every input in the set</td><td>The inputs that matter form a small, finite set</td></tr>
+<tr><td>4. State machine</td><td>Rules, invariants, a fake world</td><td>No failing sequence among those tried</td><td>The bug needs several steps in a row</td></tr>
+<tr><td>5. Solver</td><td>The code and the rule as logic</td><td>Correct for every input, for that formula</td><td>Arithmetic, ranges, permissions or policies</td></tr>
+<tr><td>6. Proof</td><td>A theorem and its proof</td><td>Correct for every input, for that model</td><td>A small core that must never be wrong</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Most projects get the most for the least from rungs 2 and 3. They run your real code, they fit in an ordinary test suite, and an agent can write them as fast as it writes unit tests. Rungs 5 and 6 pay off for a small piece of logic that many things depend on: an access check, a range table, a parser. Amazon Web Services built Zelkova, an SMT-based checker for its access policies, for that reason.</p>
+
+<h2 id="what-none-of-this-tells-you">What none of this tells you</h2>
+
+<p>Every rung checks the code against the specification, so a wrong specification passes every rung. If the four ranges had left out <code>169.254.0.0/16</code>, the range where cloud providers run the metadata service that hands out server credentials, every test and the proof would still pass. The specification is the part a person has to read.</p>
+
+<p>Rungs 2 and 4 cover only what the generator reaches. The callout in rung 2 showed a correct property passing half its runs over a real bug.</p>
+
+<p>Rungs 5 and 6 cover only the model. Each checked a formula or definition that someone wrote to match the Python. That model left parsing out, so neither saw the parsing bug.</p>
+
+<p>An agent can weaken any of these checks to make them pass. It can narrow the generator, change <code>==</code> to a one-way check without saying why, add <code>assume(...)</code> calls that skip the inputs that fail, swap the oracle for a copy of the code under test, or leave a Lean proof unfinished with <code>sorry</code>, which Lean accepts with a warning. When an agent changes a property, a strategy, an oracle or a theorem statement, review that change the way you would review a change to the firewall rules. Fail CI on any <code>sorry</code> in a Lean file.</p>
+
+<h2 id="run-it-yourself">Run it yourself</h2>
+
+<p>Every file on this page is in <code>demo/</code> beside it. The tests need only <code>uv</code>:</p>
+
+<pre><code class="language-bash">cd demo
+uv run --no-project --with hypothesis --with pytest \
+  pytest -q
+uv run --no-project --with z3-solver python rung5_solver.py</code></pre>
+
+<p>Expect 4 failures and 6 passes: the four rung tests fail on the original guard, and the three example tests and three checks on the fixed guard pass. To check the Lean file, install a throwaway toolchain under <code>/tmp</code> (it takes about 3 GB of disk; delete <code>/tmp/elan</code> afterwards):</p>
+
+<pre><code class="language-bash">curl -sSfL -o /tmp/elan-init.sh \
+  https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh
+export ELAN_HOME=/tmp/elan
+sh /tmp/elan-init.sh -y --no-modify-path \
+  --default-toolchain leanprover/lean4:stable
+/tmp/elan/bin/lean Rung6.lean  # no output: the proof checked</code></pre>
+
+<p>Then try three edits. Change <code>b ≤ 31</code> to <code>b ≤ 32</code> in <code>Rung6.lean</code> and watch Lean refuse. Replace <code>NUMBERS</code> in the rung 2 test with <code>st.integers(min_value=0, max_value=255)</code> and run it a few times. Change <code>fetch</code> in <code>test_rung4_state.py</code> to look the name up once and connect to that address, and watch rung 4 pass.</p>
+
+<h2 id="glossary">Glossary</h2>
+
+<div class="tablebox">
+<table>
+<thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td>Counterexample</td><td>An input that makes a property false. Finding one proves a bug exists, in the code or in the property.</td></tr>
+<tr><td>DNS rebinding</td><td>Making a hostname answer with one address when it is checked and another when it is used.</td></tr>
+<tr><td>Example test</td><td>A test that runs the code on one input the author chose and checks the answer.</td></tr>
+<tr><td>Exhaustive enumeration</td><td>Trying every input in a finite set. A pass is a proof over that set.</td></tr>
+<tr><td>Formal verification</td><td>Checking code against a specification by reasoning about every input, rather than by running it on some.</td></tr>
+<tr><td>Guard</td><td>A function that decides whether a request may go ahead, here whether a host is safe to connect to.</td></tr>
+<tr><td>Hypothesis (Lean)</td><td>An assumption a proof may use, such as <code>a &lt; 256</code>.</td></tr>
+<tr><td>Hypothesis (Python)</td><td>A library for property-based testing in Python.</td></tr>
+<tr><td><code>inet_aton</code></td><td>The C library function that turns a host string into an IPv4 address. It accepts octal, hex and one- to four-part forms.</td></tr>
+<tr><td>Input space</td><td>The set of every input a function can receive.</td></tr>
+<tr><td>Invariant</td><td>A property of a system's state that must hold after every step.</td></tr>
+<tr><td>Kernel (Lean)</td><td>The small checker at the core of Lean that accepts or rejects each proof.</td></tr>
+<tr><td>Loopback</td><td>The address range <code>127.0.0.0/8</code>, which always means the machine itself.</td></tr>
+<tr><td>Oracle</td><td>Whatever a test trusts to give the right answer, such as a reference model or the real system.</td></tr>
+<tr><td>Private address</td><td>An address reserved for internal networks: <code>10.0.0.0/8</code>, <code>172.16.0.0/12</code> and <code>192.168.0.0/16</code>.</td></tr>
+<tr><td>Proof assistant</td><td>A program that checks a proof step by step, such as Lean, Coq or Isabelle.</td></tr>
+<tr><td>Property</td><td>A specification written as code that returns true or false for any input.</td></tr>
+<tr><td>Property-based test</td><td>A test that checks a property on many generated inputs.</td></tr>
+<tr><td>Reference model</td><td>A short, plain implementation of a rule, used as an oracle.</td></tr>
+<tr><td>Rule (Hypothesis)</td><td>One action in a state-machine test, such as fetching a page.</td></tr>
+<tr><td>Shrinking</td><td>Reducing a failing input to the smallest one that still fails.</td></tr>
+<tr><td>SMT solver</td><td>A program that decides whether a logical formula over numbers and other types can be true. Z3 is one.</td></tr>
+<tr><td>Specification</td><td>A statement of what code must do, independent of how it does it.</td></tr>
+<tr><td>SSRF</td><td>Server-side request forgery: getting a server to make a request to a place the attacker cannot reach directly.</td></tr>
+<tr><td>State machine</td><td>A model of a system as a state plus actions that change it.</td></tr>
+<tr><td>Strategy (Hypothesis)</td><td>A recipe for generating one kind of test input.</td></tr>
+<tr><td>Tactic (Lean)</td><td>A command that builds proof steps, such as <code>unfold</code> or <code>omega</code>.</td></tr>
+<tr><td>Theorem</td><td>A statement claimed to be true, which a proof establishes.</td></tr>
+<tr><td>Time-of-check to time-of-use</td><td>A bug where a value changes between the moment code checks it and the moment code uses it.</td></tr>
+<tr><td>Unsatisfiable</td><td>Said of a formula that no assignment of values can make true. A solver uses it to prove no counterexample exists.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="sources">Sources</h2>
+<ul>
+<li><code>inet_aton(3)</code>, Linux manual page: the one- to four-part forms and the octal and hex rules. <a href="https://man7.org/linux/man-pages/man3/inet_aton.3.html">man7.org/linux/man-pages/man3/inet_aton.3.html</a>.</li>
+<li>OWASP, <em>Server-Side Request Forgery Prevention Cheat Sheet</em>: hex, octal and dword bypasses, and DNS rebinding. <a href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html">cheatsheetseries.owasp.org</a>.</li>
+<li>Python <code>ipaddress</code> module: <a href="https://docs.python.org/3/library/ipaddress.html">docs.python.org/3/library/ipaddress.html</a>.</li>
+<li>Hypothesis documentation: <a href="https://hypothesis.readthedocs.io/en/latest/">hypothesis.readthedocs.io</a>; stateful testing: <a href="https://hypothesis.readthedocs.io/en/latest/stateful.html">hypothesis.readthedocs.io/en/latest/stateful.html</a>.</li>
+<li>Koen Claessen and John Hughes, "QuickCheck: A Lightweight Tool for Random Testing of Haskell Programs", ICFP 2000, where property-based testing started: <a href="https://dl.acm.org/doi/10.1145/351240.351266">dl.acm.org/doi/10.1145/351240.351266</a>.</li>
+<li>Z3 theorem prover: <a href="https://github.com/Z3Prover/z3">github.com/Z3Prover/z3</a>; online guide: <a href="https://microsoft.github.io/z3guide/">microsoft.github.io/z3guide</a>.</li>
+<li>CrossHair, a solver-backed checker for Python: <a href="https://github.com/pschanely/CrossHair">github.com/pschanely/CrossHair</a>.</li>
+<li>Lean: <a href="https://lean-lang.org/">lean-lang.org</a>; <em>Theorem Proving in Lean 4</em>: <a href="https://lean-lang.org/theorem_proving_in_lean4/">lean-lang.org/theorem_proving_in_lean4</a>.</li>
+<li>Google DeepMind, "AI achieves silver-medal standard solving International Mathematical Olympiad problems", July 2024, on AlphaProof writing proofs in Lean: <a href="https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/">deepmind.google</a>.</li>
+<li>Gerwin Klein et al., "seL4: Formal Verification of an OS Kernel", SOSP 2009: 8,700 lines of C and 200,000 lines of Isabelle proof. <a href="https://www.sigops.org/s/conferences/sosp/2009/papers/klein-sosp09.pdf">sigops.org</a>.</li>
+<li>John Backes et al., "Semantic-based Automated Reasoning for AWS Access Policies using SMT", FMCAD 2018 (Zelkova): <a href="https://www.amazon.science/publications/semantic-based-automated-reasoning-for-aws-access-policies-using-smt">amazon.science</a>.</li>
+<li>Demo runs on 1 November 2026: the files in <code>demo/</code> under Python 3.14, Hypothesis 6.170.2, pytest, Z3 and Lean 4.35.0. The 10-of-20 and 20-of-20 figures come from 20 runs of each generator with the example database cleared before each run.</li>
+</ul>
+
+</main>
+<script>
+(function () {
+  var icon = '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>';
+  function fallbackCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+  function flip(btn) {
+    btn.innerHTML = icon + "Copied";
+    setTimeout(function () { btn.innerHTML = icon + "Copy"; }, 1000);
+  }
+  document.querySelectorAll("pre").forEach(function (pre) {
+    var btn = document.createElement("button");
+    btn.className = "copy";
+    btn.type = "button";
+    btn.innerHTML = icon + "Copy";
+    btn.addEventListener("click", function () {
+      var text = pre.querySelector("code").innerText;
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(function () { flip(btn); }, function () { fallbackCopy(text); flip(btn); });
+      } else {
+        fallbackCopy(text);
+        flip(btn);
+      }
+    });
+    pre.appendChild(btn);
+  });
+})();
+</script>
+</body>
+</html>
